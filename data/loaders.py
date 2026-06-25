@@ -10,6 +10,9 @@ data = yf.download(
 
 # 2. Validate
 
+# missing values
+data.isna().sum()
+
 # 3. Align assets
 
 # 4. Convert raw to log returns
