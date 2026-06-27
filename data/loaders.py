@@ -3,10 +3,12 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from load import *
+from load_data import load_etf_data
 from aligner import *
 from features.windowing import create_windows
 
+# %% 
+data = load_etf_data()
 # %% [markdown]
 # # 2. Validate
 # %%
