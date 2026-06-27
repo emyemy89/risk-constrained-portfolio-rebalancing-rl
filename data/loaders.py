@@ -5,82 +5,19 @@ from sklearn.preprocessing import StandardScaler
 
 from load_data import load_etf_data
 from aligner import *
+from processing import *
 from features.windowing import create_windows
 
-# %% 
+# %%
 data = load_etf_data()
 # %% [markdown]
 # # 2. Validate
-# %%
-# Missing values
-data.isna().sum()
-# %%
-data.index.duplicated().sum()
-print(data.shape)
-print(data.head())
-print(data.columns)
-# %%
-close_prices = data["Close"]
+data = data.validate_data()
 
-for ticker in close_prices.columns:
-    print(
-        ticker,
-        close_prices[ticker].first_valid_index(),
-        close_prices[ticker].last_valid_index()
-    )
-# %% [markdown]
-# # 3. Align assets
 # %%
-# We need to align so all 4 ETF:s start at the same time to match future matrix
-# For the moment, we work with only one column
-close_prices = data["Close"]
+# # Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
+features = create_features(data)
 
-aligned_prices = align_assets(close_prices)
-print(aligned_prices.head())
-print(aligned_prices.shape)
-aligned_prices.isna().sum().sum()
-# %% [markdown]
-# # 4. Convert raw to log returns
-# %%
-# Using r_t = log(P_t / P_{t-1})
-log_returns = np.log(aligned_prices / aligned_prices.shift(1))
-# %%
-# Remove the first NaN raw
-log_returns = log_returns.dropna()
-print(log_returns.shape)
-log_returns.describe()
-# %% [markdown]
-# # 5. Create rolling observation window
-# %%
-# Seeing only today's return is not relevant enough
-# We also care to see how turbulent has the asset been recently
-# we compute the std_dev or returns σ_t=std(r_t−19,...,r_t), 20 is approx. 1 month of trades
-volatility_20 = log_returns.rolling(20).std()
-print(volatility_20.head(25)) # volatility = 0.009785 ==> 0.97%
-# %%
-# We add momentum to observe the general direction, up or down
-# (momentum is supposed to be smaller than volatility, because avg_return << std_dev)
-momentum_20 = log_returns.rolling(20).mean()
-print(momentum_20.head(25))
-# %% [markdown]
-# # 6. Generate derived features
-# %%
-# Combine the features
-features = pd.concat(
-    [
-        log_returns,
-        volatility_20,
-        momentum_20
-    ],
-    axis=1,
-    keys=["ret", "vol", "mom"]
-)
-# Drop the first 19 NaN
-features = features.dropna()
-
-print(features.shape)
-print(features.head())
-# %% [markdown]
 # # 7. Create Splits
 # %%
 # Train, Validation, Test
