@@ -7,29 +7,21 @@ from features.windowing import create_windows
 # %%
 WINDOW_SIZE = 30
 data = load_etf_data()
-# %% [markdown]
-# # 2. Validate
+
+# Validate
 data = validate_data(data)
 
 # %%
-# # Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
+#  Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
 features = create_features(data)
-
-# %%
-# # 7. Create Splits
+# # Create Splits
 # Train, Validation, Test
 train_features, val_features, test_features = split_data(features)
-
-# %% [markdown]
-# # 8. Normalize
-# %%
-# Use z-score standardization
-# Transform each split
+# Normalize using z-score standardization
 train_scaled = scale_features(train_features)
 val_scaled = scale_features(val_features)
-test_scaled = scale_features(test_features)
+test_scaled = scale_features(test_features) # mean is approx 0 and std_dev approx 1
 
-train_scaled.describe() # mean is approx 0 and std_dev approx 1
 # %%
 # Convert time series to window observation
 train_windows, train_dates = create_windows(train_scaled, WINDOW_SIZE)
