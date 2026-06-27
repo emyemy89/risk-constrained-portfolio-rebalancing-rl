@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from aligner import align_assets
+
+def align_assets(prices):
+    return prices.dropna()
 
 def validate_data(data):
     if data.empty:
