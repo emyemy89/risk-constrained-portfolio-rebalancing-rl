@@ -32,7 +32,9 @@ class PortfolioEnv:
         # we must enforce weights>=0 and sum(weights)=1
         weights = self._softmax(action)
         current_window = self.windows[self.t] # today's window
-        asset_returns = current_window[-1, :5]
+        next_window = self.windows[self.t + 1]
+
+        asset_returns = next_window[-1, :self.n_assets]
         portfolio_return = np.dot(weights, asset_returns) # e.g. 0.5TLT + 0.5SPY
         self.wealth *= np.exp(portfolio_return) # update wealth
         self.portfolio_returns.append(portfolio_return) # store for risk
@@ -43,7 +45,7 @@ class PortfolioEnv:
             vol = np.std(self.portfolio_returns[-20:])
             reward -= self.risk_lambda * vol
         self.t += 1
-        done = self.t >= self.T - 1
+        done = self.t >= self.T - 2
         obs = self._get_obs() if not done else None
         info = {
             "wealth": self.wealth,
