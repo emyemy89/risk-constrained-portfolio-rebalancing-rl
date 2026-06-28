@@ -41,9 +41,7 @@ class PortfolioEnv(gym.Env):
         self.portfolio_value = self.initial_cash
         self.weights = np.ones(self.n_assets) / self.n_assets
         self.portfolio_returns = []
-        observation = self.windows[self.current_step]
-        info = {}
-        return observation, info
+        return self._get_obs(), {}
 
     def _get_obs(self):
         return self.windows[self.current_step]
@@ -54,6 +52,8 @@ class PortfolioEnv(gym.Env):
         return exp_x / np.sum(exp_x)
 
     def step(self, action):
+        # (St, action) -> (St+1, reward)
+        obs_t = self._get_obs()
         # we must enforce weights>=0 and sum(weights)=1
         weights = self._softmax(action)
         next_returns = self.returns[self.current_step + 1]
