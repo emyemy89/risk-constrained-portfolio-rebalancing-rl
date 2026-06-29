@@ -12,6 +12,7 @@ class PortfolioEnv(gym.Env):
             initial_cash=1.0,
             risk_lambda=0.1,
             volatility_window=20,
+            transaction_cost=0.001,
     ):
         self.windows = windows
         self.returns = returns
@@ -20,6 +21,7 @@ class PortfolioEnv(gym.Env):
         self.initial_cash = initial_cash
         self.risk_lambda = risk_lambda
         self.volatility_window = volatility_window
+        self.transaction_cost = transaction_cost
 
         self.action_space = spaces.Box(
             low=-np.inf,
@@ -66,7 +68,7 @@ class PortfolioEnv(gym.Env):
         benchmark_return = next_returns[0]
         excess_return = portfolio_return - benchmark_return
         reward = excess_return
-        reward -= 0.001 * turnover
+        reward -= self.transaction_cost * turnover
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
