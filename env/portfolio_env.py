@@ -31,7 +31,7 @@ class PortfolioEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.windows.shape[1], self.windows.shape[2]),
+            shape=(self.windows.shape[1], self.windows.shape[2]), # (3000, 15, 30) -> (15, 30)
             dtype=np.float32,
         )
 
@@ -44,7 +44,7 @@ class PortfolioEnv(gym.Env):
         return self._get_obs(), {}
 
     def _get_obs(self):
-        return self.windows[self.current_step]
+        return self.windows[self.current_step].astype(np.float32)
 
     def _softmax(self, x):
         x = np.array(x)
@@ -53,7 +53,6 @@ class PortfolioEnv(gym.Env):
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        obs_t = self._get_obs()
         # we must enforce weights>=0 and sum(weights)=1
         weights = self._softmax(action)
         next_returns = self.returns[self.current_step + 1]
@@ -69,14 +68,14 @@ class PortfolioEnv(gym.Env):
             reward -= self.risk_lambda * vol
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2
-        obs = self._get_obs() if not terminated else None
+        next_obs = self._get_obs() if not terminated else None
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
             "portfolio_return": portfolio_return
         }
         return (
-            obs,
+            next_obs,
             reward,
             terminated,
             False,  # truncated
