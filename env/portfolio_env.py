@@ -75,13 +75,13 @@ class PortfolioEnv(gym.Env):
             reward -= self.risk_lambda * vol
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2
-        next_obs = self._get_obs() if not terminated else None
+        next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
-            "portfolio_return": portfolio_return,
+            "cumm_return": portfolio_return,
             "episode_return": episode_return
         }
         return (
