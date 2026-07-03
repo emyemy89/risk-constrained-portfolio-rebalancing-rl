@@ -1,4 +1,4 @@
-📦 Core responsibilities
+Core responsibilities
 
 This part performs only do 5 things:
 
