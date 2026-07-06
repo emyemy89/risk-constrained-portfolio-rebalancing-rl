@@ -22,7 +22,6 @@ train_env, val_env, test_env = make_envs(
     test_windows,
     test_returns,
 )
-train_env, val_env, test_env = make_envs()
 
 # Evaluation callback
 # pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
