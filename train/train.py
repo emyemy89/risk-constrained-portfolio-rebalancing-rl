@@ -35,14 +35,19 @@ eval_callback = EvalCallback(
 )
 
 model = PPO(
-     "MlpPolicy",
-            env=train_env,
-            verbose=1,
-            n_steps=2048, # rollout length
-            batch_size=64, # minibatch size
-            gamma=0.99, # long term reward discount
-            gae_lambda=0.95 # advantage smoothing
-    )
+    policy="MlpPolicy",
+    env=train_env,
+    learning_rate=3e-4,
+    n_steps=2048, # rollout length
+    batch_size=64, # mini-batch size
+    n_epochs=10,
+    gamma=0.99, # long-term reward discount
+    gae_lambda=0.95, # advantage smoothing
+    clip_range=0.2,
+    ent_coef=0.0,
+    vf_coef=0.5,
+    verbose=1,
+)
 
 model.learn(
     total_timesteps=200_000,
