@@ -14,10 +14,11 @@ def load_training_data(window_size=30):
 
     # %%
     #  Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
-    features = create_features(data)
+    features, returns = create_features(data)
     # # Create Splits
     # Train, Validation, Test
     train_features, val_features, test_features = split_data(features)
+    train_returns, val_returns, test_returns = split_data(returns)
     # Normalize using z-score standardization
     train_scaled = scale_features(train_features)
     val_scaled = scale_features(val_features)

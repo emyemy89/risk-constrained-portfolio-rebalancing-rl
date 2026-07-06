@@ -38,7 +38,7 @@ def create_features(data):
         axis=1,
         keys=["ret", "vol", "mom"]
     ).dropna()
-    return features
+    return features, log_returns.loc[features.index]
 
 def split_data(features):
     return( features.loc[:'2018-12-31'],
