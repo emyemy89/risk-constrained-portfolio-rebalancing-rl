@@ -40,11 +40,11 @@ model = PPO(
     learning_rate=3e-4,
     n_steps=2048, # rollout length
     batch_size=64, # mini-batch size
-    n_epochs=10,
-    gamma=0.99, # long-term reward discount
-    gae_lambda=0.95, # advantage smoothing
-    clip_range=0.2,
-    ent_coef=0.0,
+    n_epochs=10, # how many times PPO reuses the collected rollout
+    gamma=0.99, # long-term reward discount (how much agent values future rewards)
+    gae_lambda=0.95, # advantage smoothing(how are they estimated)
+    clip_range=0.2, # what makes PPO "proximal" and stable.
+    ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
     vf_coef=0.5,
     verbose=1,
 )
