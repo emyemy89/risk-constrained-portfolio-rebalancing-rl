@@ -29,6 +29,13 @@ def load_training_data(window_size=30):
     train_windows, train_dates = create_windows(train_scaled, WINDOW_SIZE)
     val_windows, val_dates = create_windows(val_scaled, WINDOW_SIZE)
     test_windows, test_dates = create_windows(test_scaled, WINDOW_SIZE)
+
+    # return must match the observation, so we shift
+    offset = WINDOW_SIZE - 1
+
+    train_returns = train_returns.iloc[offset:].to_numpy()
+    val_returns = val_returns.iloc[offset:].to_numpy()
+    test_returns = test_returns.iloc[offset:].to_numpy()
     # %%
     return (
         train_windows,
