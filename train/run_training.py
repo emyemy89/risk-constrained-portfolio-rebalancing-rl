@@ -47,7 +47,7 @@ def run_training():
         clip_range=0.2, # what makes PPO "proximal" and stable.
         ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
         vf_coef=0.5,
-        tensorboard_log="./logs/tensorboard/", # logs
+        tensorboard_log="../logs/tensorboard/", # logs
         verbose=1,
     )
 
@@ -58,7 +58,7 @@ def run_training():
 
     # best_model saved automatically during training based on val performance
     # final_model is the state after the last update
-    model.save("./models/final_model")
+    model.save("../models/final_model")
 
 if __name__ == "__main__":
     run_training()
