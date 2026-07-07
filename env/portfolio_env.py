@@ -24,8 +24,8 @@ class PortfolioEnv(gym.Env):
         self.transaction_cost = transaction_cost
 
         self.action_space = spaces.Box(
-            low=-np.inf,
-            high=np.inf,
+            low=-10,
+            high=10,
             shape=(self.n_assets,),
             dtype=np.float32,
         )
