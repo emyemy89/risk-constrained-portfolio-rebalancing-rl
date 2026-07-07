@@ -28,8 +28,8 @@ def run_training():
     # pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
     eval_callback = EvalCallback(
         val_env,
-        best_model_save_path="./models/", # saves the checkpoint with the best validation performance
-        log_path="./logs/",
+        best_model_save_path="../models/", # saves the checkpoint with the best validation performance
+        log_path="../logs/",
         eval_freq=10_000, #evaluates every 10K environment steps
         deterministic=True,
         render=False,
