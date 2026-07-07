@@ -4,58 +4,62 @@ from stable_baselines3.common.callbacks import EvalCallback
 from data.pipeline import load_training_data
 from train.make_env import make_envs
 
-# Data Loading
-(
-    train_windows,
-    train_returns,
-    val_windows,
-    val_returns,
-    test_windows,
-    test_returns,
-) = load_training_data()
+def train():
+    # Data Loading
+    (
+        train_windows,
+        train_returns,
+        val_windows,
+        val_returns,
+        test_windows,
+        test_returns,
+    ) = load_training_data()
 
-train_env, val_env, test_env = make_envs(
-    train_windows,
-    train_returns,
-    val_windows,
-    val_returns,
-    test_windows,
-    test_returns,
-)
+    train_env, val_env, test_env = make_envs(
+        train_windows,
+        train_returns,
+        val_windows,
+        val_returns,
+        test_windows,
+        test_returns,
+    )
 
-# Evaluation callback
-# pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
-eval_callback = EvalCallback(
-    val_env,
-    best_model_save_path="./models/", # saves the checkpoint with the best validation performance
-    log_path="./logs/",
-    eval_freq=10_000, #evaluates every 10K environment steps
-    deterministic=True,
-    render=False,
-)
+    # Evaluation callback
+    # pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
+    eval_callback = EvalCallback(
+        val_env,
+        best_model_save_path="./models/", # saves the checkpoint with the best validation performance
+        log_path="./logs/",
+        eval_freq=10_000, #evaluates every 10K environment steps
+        deterministic=True,
+        render=False,
+    )
 
-model = PPO(
-    policy="MlpPolicy",
-    env=train_env,
-    learning_rate=3e-4,
-    n_steps=2048, # rollout length
-    batch_size=64, # mini-batch size
-    n_epochs=10, # how many times PPO reuses the collected rollout
-    gamma=0.99, # long-term reward discount (how much agent values future rewards)
-    gae_lambda=0.95, # advantage smoothing(how are they estimated)
-    clip_range=0.2, # what makes PPO "proximal" and stable.
-    ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
-    vf_coef=0.5,
-    tensorboard_log="./logs/tensorboard/", # logs
-    verbose=1,
-)
+    model = PPO(
+        policy="MlpPolicy",
+        env=train_env,
+        learning_rate=3e-4,
+        n_steps=2048, # rollout length
+        batch_size=64, # mini-batch size
+        n_epochs=10, # how many times PPO reuses the collected rollout
+        gamma=0.99, # long-term reward discount (how much agent values future rewards)
+        gae_lambda=0.95, # advantage smoothing(how are they estimated)
+        clip_range=0.2, # what makes PPO "proximal" and stable.
+        ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
+        vf_coef=0.5,
+        tensorboard_log="./logs/tensorboard/", # logs
+        verbose=1,
+    )
 
-model.learn(
-    total_timesteps=200_000,
-    callback=eval_callback,
-)
+    model.learn(
+        total_timesteps=200_000,
+        callback=eval_callback,
+    )
 
-# best_model saved automatically during training based on val performance
-# final_model is the state after the last update
-model.save("./models/final_model")
+    # best_model saved automatically during training based on val performance
+    # final_model is the state after the last update
+    model.save("./models/final_model")
+
+if __name__ == "__main__":
+    train()
 
