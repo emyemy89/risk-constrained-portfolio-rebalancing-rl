@@ -4,7 +4,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 from data.pipeline import load_training_data
 from train.make_env import make_envs
 
-def train():
+def run_training():
     # Data Loading
     (
         train_windows,
@@ -61,5 +61,5 @@ def train():
     model.save("./models/final_model")
 
 if __name__ == "__main__":
-    train()
+    run_training()
 
