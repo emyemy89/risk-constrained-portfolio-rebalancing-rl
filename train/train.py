@@ -27,9 +27,9 @@ train_env, val_env, test_env = make_envs(
 # pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
 eval_callback = EvalCallback(
     val_env,
-    best_model_save_path="./models/",
+    best_model_save_path="./models/", # saves the checkpoint with the best validation performance
     log_path="./logs/",
-    eval_freq=10_000,
+    eval_freq=10_000, #evaluates every 10K environment steps
     deterministic=True,
     render=False,
 )
@@ -46,6 +46,7 @@ model = PPO(
     clip_range=0.2, # what makes PPO "proximal" and stable.
     ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
     vf_coef=0.5,
+    tensorboard_log="./logs/tensorboard/", # logs
     verbose=1,
 )
 
