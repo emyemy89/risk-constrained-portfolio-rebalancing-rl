@@ -55,5 +55,7 @@ model.learn(
     callback=eval_callback,
 )
 
-model.save("final_model")
+# best_model saved automatically during training based on val performance
+# final_model is the state after the last update
+model.save("./models/final_model")
 
