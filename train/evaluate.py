@@ -16,3 +16,17 @@ def evaluate_model(model, env, num_episodes=5):
             done = truncated or terminated
         episode_returns.append(total_return)
     return float(np.mean(episode_returns))
+
+def inspect_weights(model, env, n_steps=10):
+    obs, _ = env.reset()
+    for _ in range(n_steps):
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(
+            "weights:",
+            np.round(info["weights"], 3),
+            "reward:",
+            round(reward, 4)
+        )
+        if terminated or truncated:
+            break

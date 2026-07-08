@@ -3,6 +3,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
+from train.evaluate import inspect_weights
 
 def run_training():
     # Data Loading
@@ -45,7 +46,7 @@ def run_training():
         gamma=0.99, # long-term reward discount (how much agent values future rewards)
         gae_lambda=0.95, # advantage smoothing(how are they estimated)
         clip_range=0.2, # what makes PPO "proximal" and stable.
-        target_kl=0.03,
+        target_kl=0.02,
         ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
         vf_coef=0.5,
         tensorboard_log="../logs/tensorboard/", # logs
@@ -60,6 +61,11 @@ def run_training():
     # best_model saved automatically during training based on val performance
     # final_model is the state after the last update
     model.save("../models/final_model")
+
+    inspect_weights(
+        model,
+        test_env
+    )
 
 if __name__ == "__main__":
     run_training()

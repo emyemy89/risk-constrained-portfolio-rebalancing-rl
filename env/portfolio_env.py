@@ -83,7 +83,7 @@ class PortfolioEnv(gym.Env):
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
-            "cumm_return": portfolio_return,
+            "cumm_return": self.portfolio_value / self.initial_value - 1,
             "episode_return": episode_return
         }
         return (
