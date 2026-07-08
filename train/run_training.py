@@ -38,13 +38,14 @@ def run_training():
     model = PPO(
         policy="MlpPolicy",
         env=train_env,
-        learning_rate=3e-4,
+        learning_rate=1e-4,
         n_steps=2048, # rollout length
         batch_size=64, # mini-batch size
         n_epochs=10, # how many times PPO reuses the collected rollout
         gamma=0.99, # long-term reward discount (how much agent values future rewards)
         gae_lambda=0.95, # advantage smoothing(how are they estimated)
         clip_range=0.2, # what makes PPO "proximal" and stable.
+        target_kl=0.03,
         ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
         vf_coef=0.5,
         tensorboard_log="../logs/tensorboard/", # logs
