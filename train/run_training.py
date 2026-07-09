@@ -1,9 +1,10 @@
+import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights
+from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
 
 def run_training():
     # Data Loading
@@ -15,6 +16,11 @@ def run_training():
         test_windows,
         test_returns,
     ) = load_training_data()
+
+    spy = np.array([1, 0, 0, 0, 0])
+    equal = np.ones(5) / 5
+    print("SPY:", evaluate_baseline(test_returns, spy))
+    print("Equal weight:", evaluate_baseline(test_returns, equal))
 
     train_env, val_env, test_env = make_envs(
         train_windows,
@@ -66,6 +72,23 @@ def run_training():
         model,
         test_env
     )
+    best_model = PPO.load("../models/best_model", env=test_env)
+    results = evaluate_portfolio(
+        best_model,
+        test_env,
+    )
+    print(results["portfolio_values"][-1])
+    total_return = results["portfolio_values"][-1] - 1
+    print("Test cumulative return:", total_return)
+
+    # compute metrics eval
+    metrics = compute_metrics(
+        results["portfolio_values"],
+        results["daily_returns"],
+    )
+    for k, v in metrics.items():
+        print(f"{k}: {v:.4f}")
+
 
 if __name__ == "__main__":
     run_training()
