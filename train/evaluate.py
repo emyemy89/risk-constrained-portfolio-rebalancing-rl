@@ -91,3 +91,15 @@ def plot_portfolios(strategy_values):
     plt.legend()
     plt.grid(True)
     plt.show()
+
+def plot_weights(weights):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10,5))
+    plt.plot(weights)
+    plt.title("PPO Portfolio Weights")
+    plt.xlabel("Trading Days")
+    plt.ylabel("Weight")
+    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ"])
+    plt.grid(True)
+    plt.show()
+

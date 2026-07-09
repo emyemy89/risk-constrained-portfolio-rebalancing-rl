@@ -4,7 +4,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics, plot_portfolios
+from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics, plot_portfolios, plot_weights
 
 def run_training():
     # Data Loading
@@ -108,9 +108,9 @@ def run_training():
         "SPY": spy_values,
         "Equal Weight": equal_values,
     })
-    print(len(ppo_values))
-    print(len(spy_values))
-    print(len(equal_values))
+
+    # plot weights
+    plot_weights(results["weights"])
 
 
 if __name__ == "__main__":
