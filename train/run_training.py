@@ -4,7 +4,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
+from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics, plot_portfolios
 
 def run_training():
     # Data Loading
@@ -17,10 +17,10 @@ def run_training():
         test_returns,
     ) = load_training_data()
 
-    spy = np.array([1, 0, 0, 0, 0])
-    equal = np.ones(5) / 5
-    print("SPY:", evaluate_baseline(test_returns, spy))
-    print("Equal weight:", evaluate_baseline(test_returns, equal))
+    # spy = np.array([1, 0, 0, 0, 0])
+    # equal = np.ones(5) / 5
+    # print("SPY:", evaluate_baseline(test_returns, spy))
+    # print("Equal weight:", evaluate_baseline(test_returns, equal))
 
     train_env, val_env, test_env = make_envs(
         train_windows,
@@ -88,6 +88,29 @@ def run_training():
     )
     for k, v in metrics.items():
         print(f"{k}: {v:.4f}")
+
+    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0]))
+    equal = evaluate_baseline(test_returns, np.ones(5) / 5)
+    print("PPO:", metrics)
+    print("SPY:", spy)
+    print("Equal:", equal)
+
+
+
+    # plot portfolio values
+    ppo_values = results["portfolio_values"]
+    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0])
+    equal_returns = test_returns @ (np.ones(5) / 5)
+    spy_values = np.exp(np.cumsum(spy_returns))
+    equal_values = np.exp(np.cumsum(equal_returns))
+    plot_portfolios({
+        "PPO": ppo_values,
+        "SPY": spy_values,
+        "Equal Weight": equal_values,
+    })
+    print(len(ppo_values))
+    print(len(spy_values))
+    print(len(equal_values))
 
 
 if __name__ == "__main__":
