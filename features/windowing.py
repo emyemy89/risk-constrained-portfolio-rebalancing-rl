@@ -8,6 +8,7 @@ def create_windows(
 ) -> tuple[np.ndarray, pd.DatetimeIndex]:
     """
     Convert a feature dataframe into rolling observation windows.
+    We mainly do this to tweak the Markovian property, hoping that 30 days obs will be enough.
     Parameters
     ----------
     data

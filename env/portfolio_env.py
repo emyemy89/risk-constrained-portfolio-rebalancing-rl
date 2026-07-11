@@ -24,8 +24,8 @@ class PortfolioEnv(gym.Env):
         self.transaction_cost = transaction_cost
 
         self.action_space = spaces.Box(
-            low=-np.inf,
-            high=np.inf,
+            low=-10,
+            high=10,
             shape=(self.n_assets,),
             dtype=np.float32,
         )
@@ -67,14 +67,16 @@ class PortfolioEnv(gym.Env):
         # compute reward
         benchmark_return = next_returns[0]
         excess_return = portfolio_return - benchmark_return
-        reward = excess_return
+        # reward = excess_return
+        reward = portfolio_return
         reward -= self.transaction_cost * turnover
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             vol = np.std(recent_returns)
-            reward -= self.risk_lambda * vol
+            #reward -= self.risk_lambda * vol
+            reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2
         next_obs = self._get_obs()
@@ -83,8 +85,9 @@ class PortfolioEnv(gym.Env):
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
-            "cumm_return": portfolio_return,
-            "episode_return": episode_return
+            "cumm_return": self.portfolio_value / self.initial_value - 1,
+            "episode_return": episode_return,
+            "step_return": portfolio_return,
         }
         return (
             next_obs,

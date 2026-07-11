@@ -1,3 +1,4 @@
+from stable_baselines3.common.monitor import Monitor
 from env.portfolio_env import PortfolioEnv
 
 def make_env(windows, returns, **kwargs):
@@ -5,11 +6,12 @@ def make_env(windows, returns, **kwargs):
     Create a PortfolioEnv instance
     Additional keyword arguments are forwarded to PortfolioEnv
     """
-    return PortfolioEnv(
+    env = PortfolioEnv(
         windows=windows,
         returns=returns,
         **kwargs,
     )
+    return Monitor(env)
 
 def make_envs(
     train_windows,
