@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data.processing import align_assets
+from data.data_engineering.processing import align_assets
 
 def compute_log_returns(aligned_prices):
     """
