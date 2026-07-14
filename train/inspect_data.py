@@ -1,7 +1,34 @@
 import matplotlib.pyplot as plt
 
+def plot_portfolios(strategy_values):
+    plt.figure(figsize=(10, 5))
+    for name, values in strategy_values.items():
+        plt.plot(values, label=name)
+    plt.xlabel("Trading Days")
+    plt.ylabel("Portfolio Value")
+    plt.title("Portfolio Performance Comparison")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def plot_weights(weights):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10,5))
+    plt.plot(weights)
+    plt.title("PPO Portfolio Weights")
+    plt.xlabel("Trading Days")
+    plt.ylabel("Weight")
+    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ"])
+    plt.grid(True)
+    plt.show()
+
 
 def inspect_observation(window):
+    """
+    Sanity check to ensure observation looks fine
+    :param window:
+    :return:
+    """
     print("Shape:", window.shape)
     plt.figure(figsize=(12, 6))
     plt.plot(window)
