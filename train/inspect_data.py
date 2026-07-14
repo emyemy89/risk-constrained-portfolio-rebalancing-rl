@@ -12,7 +12,6 @@ def plot_portfolios(strategy_values):
     plt.show()
 
 def plot_weights(weights):
-    import matplotlib.pyplot as plt
     plt.figure(figsize=(10,5))
     plt.plot(weights)
     plt.title("PPO Portfolio Weights")
@@ -25,9 +24,12 @@ def plot_weights(weights):
 
 def inspect_observation(window):
     """
-    Sanity check to ensure observation looks fine
+    Sanity check to ensure observation looks fine. Should be:
+        Returns: noisy, oscillating around 0
+        volatility: smoother, slowly changing.
+        Momentum: smoother than returns, showing trends.
     :param window:
-    :return:
+    :return: None
     """
     print("Shape:", window.shape)
     plt.figure(figsize=(12, 6))
