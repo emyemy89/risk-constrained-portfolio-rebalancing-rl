@@ -6,7 +6,7 @@ from features.windowing import create_windows
 from data.data_engineering.features_def import create_features
 
 # %%
-def load_training_data(window_size=30):
+def load_training_data():
     OBSERVATION_WINDOW_SIZE = 30
     ROLLING_WINDOW = 20
     data = load_etf_data()
