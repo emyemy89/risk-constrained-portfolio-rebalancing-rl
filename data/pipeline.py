@@ -3,6 +3,7 @@
 from data.load_data import load_etf_data
 from data.processing import *
 from features.windowing import create_windows
+from data.features_def import create_features
 
 # %%
 def load_training_data(window_size=30):
