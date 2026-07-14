@@ -20,10 +20,6 @@ def run_training():
     inspect_observation(train_windows[0])
 
 
-    # spy = np.array([1, 0, 0, 0, 0])
-    # equal = np.ones(5) / 5
-    # print("SPY:", evaluate_baseline(test_returns, spy))
-    # print("Equal weight:", evaluate_baseline(test_returns, equal))
 
     train_env, val_env, test_env = make_envs(
         train_windows,
