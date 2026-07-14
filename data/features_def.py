@@ -48,7 +48,7 @@ def compute_correlation(log_returns, time_interval):
     return correlations
 
 
-def create_features(data):
+def create_features(data, rolling_window):
     """
     Define features used in RL training.
     Currently it holds 19 features: 5 ret, 5 vol, 5 mom, 5 corr
@@ -61,17 +61,17 @@ def create_features(data):
     aligned_prices = align_assets(close_prices)
     # get the features
     log_returns = compute_log_returns(aligned_prices)
-    volatility_20 = compute_volatility(log_returns, 20)
-    momentum_20 = compute_momentum(log_returns, 20)
-    correlations_20 = compute_correlation(log_returns, 20)
+    volatility = compute_volatility(log_returns, rolling_window)
+    momentum = compute_momentum(log_returns, rolling_window)
+    correlations = compute_correlation(log_returns, rolling_window)
 
     # Combine the features
     features = pd.concat(
         [
             log_returns,
-            volatility_20,
-            momentum_20,
-            correlations_20,
+            volatility,
+            momentum,
+            correlations,
         ],
         axis=1,
         keys=["ret", "vol", "mom", "corr"],
