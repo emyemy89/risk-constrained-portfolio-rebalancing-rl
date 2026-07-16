@@ -4,8 +4,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
-from train.inspect_data import inspect_observation,  plot_portfolios, plot_weights
+from train.inspect_data import inspect_observation
 from train.run_info import run_eval_info
 
 def run_training():
