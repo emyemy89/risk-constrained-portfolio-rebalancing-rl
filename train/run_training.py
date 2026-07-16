@@ -1,11 +1,10 @@
-import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
 from train.inspect_data import inspect_observation
-from train.run_info import run_eval_info
+from train.run_info import run_debugging_info
 
 def run_training():
     # Data Loading
@@ -68,7 +67,7 @@ def run_training():
     model.save("../models/final_model")
 
 
-    run_eval_info(model, test_env, test_returns)
+    run_debugging_info(model, test_env, test_returns)
 
 if __name__ == "__main__":
     run_training()

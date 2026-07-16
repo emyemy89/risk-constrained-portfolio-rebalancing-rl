@@ -1,11 +1,10 @@
-import numpy as np
 from stable_baselines3 import PPO
 
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
+from train.evaluate import *
 from train.inspect_data import  plot_portfolios, plot_weights
 
 
-def run_eval_info(model, test_env, test_returns):
+def run_debugging_info(model, test_env, test_returns):
     inspect_weights(
         model,
         test_env
@@ -32,6 +31,10 @@ def run_eval_info(model, test_env, test_returns):
     print("PPO:", metrics)
     print("SPY:", spy)
     print("Equal:", equal)
+
+    weight_statistics(results["weights"])
+    turnover_statistics(results["weights"])
+    equal_weight_distance(results["weights"])
 
     # plot portfolio values
     ppo_values = results["portfolio_values"]

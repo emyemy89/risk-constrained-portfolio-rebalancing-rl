@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 def evaluate_model(model, env, num_episodes=5):
     """
@@ -81,4 +80,49 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
         "Max Drawdown": max_drawdown,
     }
 
+def weight_statistics(weights):
+    """
+    Print summary statistics for portfolio weights.
+    Parameters
+    ----------
+    weights : ndarray
+        Shape (T, n_assets)
+    """
+    asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ"]
+    print("\nWeight statistics")
+    print("-" * 60)
+    for i, asset in enumerate(asset_names):
+        w = weights[:, i]
+        print(
+            f"{asset:4}"
+            f" mean={w.mean():.3f}"
+            f" std={w.std():.3f}"
+            f" min={w.min():.3f}"
+            f" max={w.max():.3f}"
+        )
+
+def turnover_statistics(weights):
+    """
+    Compute portfolio turnover.
+    """
+    turnover = np.abs(np.diff(weights, axis=0)).sum(axis=1)
+    print("\nTurnover statistics")
+    print("-" * 60)
+    print(f"Mean   : {turnover.mean():.4f}")
+    print(f"Median : {np.median(turnover):.4f}")
+    print(f"Max    : {turnover.max():.4f}")
+    return turnover
+
+def equal_weight_distance(weights):
+    """
+    Compute equal weight distance
+    :param weights:
+    :return:
+    """
+    equal = np.ones(weights.shape[1]) / weights.shape[1]
+    distance = np.abs(weights - equal).sum(axis=1)
+    print("\nDistance to Equal Weight")
+    print("-" * 60)
+    print(f"Average L1 distance : {distance.mean():.4f}")
+    print(f"Maximum distance    : {distance.max():.4f}")
 
