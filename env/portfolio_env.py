@@ -33,7 +33,7 @@ class PortfolioEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.windows.shape[1], self.windows.shape[2]), # (3000, 15, 30) -> (15, 30)
+            shape=(self.windows.shape[1], self.windows.shape[2]), # (3000, 19, 30) -> (19, 30)
             dtype=np.float32,
         )
 
@@ -47,7 +47,9 @@ class PortfolioEnv(gym.Env):
         return self._get_obs(), {}
 
     def _get_obs(self):
-        return self.windows[self.current_step].astype(np.float32)
+        market_obs = self.windows[self.current_step].astype(np.float32)
+        portfolio_state = self.prev_weights.astype(np.float32)
+        return np.concatenate([market_obs.flatten(),portfolio_state])
 
     def _softmax(self, x):
         x = np.array(x)
