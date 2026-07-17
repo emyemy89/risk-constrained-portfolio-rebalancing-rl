@@ -32,10 +32,15 @@ class PortfolioEnv(gym.Env):
         )
 
         # Observation
+        obs_size = (
+                self.windows.shape[1] *
+                self.windows.shape[2]
+                + self.n_assets
+        )
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.windows.shape[1]* self.windows.shape[2]+ self.n_assets), # (3000, 19, 30) -> (19, 30)
+            shape=(obs_size,), # (3000, 19, 30) -> (19, 30)
             dtype=np.float32,
         )
 
