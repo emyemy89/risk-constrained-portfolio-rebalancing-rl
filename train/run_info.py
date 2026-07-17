@@ -38,8 +38,8 @@ def run_debugging_info(model, test_env, test_returns):
 
     # plot portfolio values
     ppo_values = results["portfolio_values"]
-    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0])
-    equal_returns = test_returns @ (np.ones(5) / 5)
+    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
+    equal_returns = test_returns @ (np.ones(6) / 6)
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
     plot_portfolios({
