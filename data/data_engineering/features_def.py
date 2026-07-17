@@ -64,7 +64,8 @@ def create_features(data, rolling_window):
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
     volatility = compute_volatility(log_returns, rolling_window)
     momentum = compute_momentum(log_returns, rolling_window)
-    correlations = compute_correlation(log_returns, rolling_window)
+    correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
+    correlations["CASH_corr_SPY"] = 0.0
 
     # Combine the features
     features = pd.concat(
