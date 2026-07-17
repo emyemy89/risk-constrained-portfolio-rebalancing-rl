@@ -82,7 +82,7 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
 
 def weight_statistics(weights):
     """
-    Print summary statistics for portfolio weights.
+    Print summary statistics for portfolio weights
     Parameters
     ----------
     weights : ndarray
@@ -125,4 +125,22 @@ def equal_weight_distance(weights):
     print("-" * 60)
     print(f"Average L1 distance : {distance.mean():.4f}")
     print(f"Maximum distance    : {distance.max():.4f}")
+
+def cash_statistics(weights, returns):
+    """
+    Analyze whether cash allocation predicts future returns.
+    Last column = CASH.
+    """
+    cash = weights[:, -1]
+    future_returns = returns[1:, :-1].mean(axis=1)
+    # align lengths
+    n = min(len(cash)-1, len(future_returns))
+    cash = cash[:n]
+    future_returns = future_returns[:n]
+    high_cash = future_returns[cash > np.median(cash)]
+    low_cash = future_returns[cash <= np.median(cash)]
+    print("\nCash Timing Analysis")
+    print("-" * 60)
+    print(f"High cash periods future return: {high_cash.mean():.5f}")
+    print(f"Low cash periods future return : {low_cash.mean():.5f}")
 
