@@ -1,7 +1,7 @@
 from stable_baselines3 import PPO
 
 from train.evaluate import *
-from train.inspect_data import  plot_portfolios, plot_weights
+from train.utils.inspect_data import  plot_portfolios, plot_weights, plot_cash_weight
 
 
 def run_debugging_info(model, test_env, test_returns):
@@ -50,3 +50,4 @@ def run_debugging_info(model, test_env, test_returns):
 
     # plot weights
     plot_weights(results["weights"])
+    plot_cash_weight(results["weights"])
