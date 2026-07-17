@@ -23,6 +23,7 @@ class PortfolioEnv(gym.Env):
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
 
+        # Action
         self.action_space = spaces.Box(
             low=-10,
             high=10,
@@ -30,10 +31,11 @@ class PortfolioEnv(gym.Env):
             dtype=np.float32,
         )
 
+        # Observation
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.windows.shape[1], self.windows.shape[2]), # (3000, 19, 30) -> (19, 30)
+            shape=(self.windows.shape[1]* self.windows.shape[2]+ self.n_assets), # (3000, 19, 30) -> (19, 30)
             dtype=np.float32,
         )
 
