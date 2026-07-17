@@ -17,7 +17,7 @@ def plot_weights(weights):
     plt.title("PPO Portfolio Weights")
     plt.xlabel("Trading Days")
     plt.ylabel("Weight")
-    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ"])
+    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
     plt.grid(True)
     plt.show()
 

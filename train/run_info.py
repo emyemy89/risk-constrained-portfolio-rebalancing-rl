@@ -26,8 +26,8 @@ def run_debugging_info(model, test_env, test_returns):
     for k, v in metrics.items():
         print(f"{k}: {v:.4f}")
 
-    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0]))
-    equal = evaluate_baseline(test_returns, np.ones(5) / 5)
+    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
+    equal = evaluate_baseline(test_returns, np.ones(6) / 6)
     print("PPO:", metrics)
     print("SPY:", spy)
     print("Equal:", equal)

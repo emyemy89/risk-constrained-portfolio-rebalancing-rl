@@ -3,7 +3,7 @@ import yfinance as yf
 
 def load_etf_data():
     return yf.download(
-    ["SPY", "QQQ", "TLT", "GLD", "VNQ"],
+    ["SPY", "QQQ", "TLT", "GLD", "VNQ"], # Cash is not loaded here, but in /data/features_def.py
             start="2000-01-01",
             end="2026-01-01",
             auto_adjust=True

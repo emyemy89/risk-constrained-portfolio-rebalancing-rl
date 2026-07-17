@@ -88,7 +88,7 @@ def weight_statistics(weights):
     weights : ndarray
         Shape (T, n_assets)
     """
-    asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ"]
+    asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"]
     print("\nWeight statistics")
     print("-" * 60)
     for i, asset in enumerate(asset_names):

@@ -61,6 +61,7 @@ def create_features(data, rolling_window):
     aligned_prices = align_assets(close_prices)
     # get the features
     log_returns = compute_log_returns(aligned_prices)
+    log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
     volatility = compute_volatility(log_returns, rolling_window)
     momentum = compute_momentum(log_returns, rolling_window)
     correlations = compute_correlation(log_returns, rolling_window)
