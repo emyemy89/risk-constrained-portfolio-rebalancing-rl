@@ -4,7 +4,8 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics, plot_portfolios, plot_weights
+from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
+from train.inspect_data import inspect_observation,  plot_portfolios, plot_weights
 
 def run_training():
     # Data Loading
@@ -16,11 +17,9 @@ def run_training():
         test_windows,
         test_returns,
     ) = load_training_data()
+    inspect_observation(train_windows[0])
 
-    # spy = np.array([1, 0, 0, 0, 0])
-    # equal = np.ones(5) / 5
-    # print("SPY:", evaluate_baseline(test_returns, spy))
-    # print("Equal weight:", evaluate_baseline(test_returns, equal))
+
 
     train_env, val_env, test_env = make_envs(
         train_windows,

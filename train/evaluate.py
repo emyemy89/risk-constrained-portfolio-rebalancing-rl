@@ -81,25 +81,4 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
         "Max Drawdown": max_drawdown,
     }
 
-def plot_portfolios(strategy_values):
-    plt.figure(figsize=(10, 5))
-    for name, values in strategy_values.items():
-        plt.plot(values, label=name)
-    plt.xlabel("Trading Days")
-    plt.ylabel("Portfolio Value")
-    plt.title("Portfolio Performance Comparison")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-def plot_weights(weights):
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=(10,5))
-    plt.plot(weights)
-    plt.title("PPO Portfolio Weights")
-    plt.xlabel("Trading Days")
-    plt.ylabel("Weight")
-    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ"])
-    plt.grid(True)
-    plt.show()
 
