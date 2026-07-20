@@ -1,12 +1,14 @@
 # Pipeline orchestrator
 # %%
-from data.load_data import load_etf_data
-from data.processing import *
+from data.extract.load_data import load_etf_data
+from data.data_engineering.processing import *
 from features.windowing import create_windows
+from data.data_engineering.features_def import create_features
 
 # %%
-def load_training_data(window_size=30):
-    WINDOW_SIZE = 30
+def load_training_data():
+    OBSERVATION_WINDOW_SIZE = 30
+    ROLLING_WINDOW = 20
     data = load_etf_data()
 
     # Validate
@@ -14,7 +16,7 @@ def load_training_data(window_size=30):
 
     # %%
     #  Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
-    features, returns = create_features(data)
+    features, returns = create_features(data,ROLLING_WINDOW)
     # # Create Splits
     # Train, Validation, Test
     train_features, val_features, test_features = split_data(features)
@@ -26,12 +28,12 @@ def load_training_data(window_size=30):
 
     # %%
     # Convert time series to window observation
-    train_windows, train_dates = create_windows(train_scaled, WINDOW_SIZE)
-    val_windows, val_dates = create_windows(val_scaled, WINDOW_SIZE)
-    test_windows, test_dates = create_windows(test_scaled, WINDOW_SIZE)
+    train_windows, train_dates = create_windows(train_scaled, OBSERVATION_WINDOW_SIZE)
+    val_windows, val_dates = create_windows(val_scaled, OBSERVATION_WINDOW_SIZE)
+    test_windows, test_dates = create_windows(test_scaled, OBSERVATION_WINDOW_SIZE)
 
     # return must match the observation, so we shift
-    offset = WINDOW_SIZE - 1
+    offset = OBSERVATION_WINDOW_SIZE - 1
 
     train_returns = train_returns.iloc[offset:].to_numpy()
     val_returns = val_returns.iloc[offset:].to_numpy()

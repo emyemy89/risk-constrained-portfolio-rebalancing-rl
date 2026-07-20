@@ -1,11 +1,10 @@
-import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.evaluate import inspect_weights, evaluate_portfolio, evaluate_baseline, compute_metrics
-from train.inspect_data import inspect_observation,  plot_portfolios, plot_weights
+from train.inspect_data import inspect_observation
+from train.run_info import run_debugging_info
 
 def run_training():
     # Data Loading
@@ -20,7 +19,7 @@ def run_training():
     inspect_observation(train_windows[0])
 
 
-
+    # create the environments
     train_env, val_env, test_env = make_envs(
         train_windows,
         train_returns,
@@ -67,50 +66,8 @@ def run_training():
     # final_model is the state after the last update
     model.save("../models/final_model")
 
-    inspect_weights(
-        model,
-        test_env
-    )
-    best_model = PPO.load("../models/best_model", env=test_env)
-    results = evaluate_portfolio(
-        best_model,
-        test_env,
-    )
-    print(results["portfolio_values"][-1])
-    total_return = results["portfolio_values"][-1] - 1
-    print("Test cumulative return:", total_return)
 
-    # compute metrics eval
-    metrics = compute_metrics(
-        results["portfolio_values"],
-        results["daily_returns"],
-    )
-    for k, v in metrics.items():
-        print(f"{k}: {v:.4f}")
-
-    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0]))
-    equal = evaluate_baseline(test_returns, np.ones(5) / 5)
-    print("PPO:", metrics)
-    print("SPY:", spy)
-    print("Equal:", equal)
-
-
-
-    # plot portfolio values
-    ppo_values = results["portfolio_values"]
-    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0])
-    equal_returns = test_returns @ (np.ones(5) / 5)
-    spy_values = np.exp(np.cumsum(spy_returns))
-    equal_values = np.exp(np.cumsum(equal_returns))
-    plot_portfolios({
-        "PPO": ppo_values,
-        "SPY": spy_values,
-        "Equal Weight": equal_values,
-    })
-
-    # plot weights
-    plot_weights(results["weights"])
-
+    run_debugging_info(model, test_env, test_returns)
 
 if __name__ == "__main__":
     run_training()

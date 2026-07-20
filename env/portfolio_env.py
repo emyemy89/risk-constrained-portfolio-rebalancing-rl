@@ -23,6 +23,7 @@ class PortfolioEnv(gym.Env):
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
 
+        # Action
         self.action_space = spaces.Box(
             low=-10,
             high=10,
@@ -30,10 +31,16 @@ class PortfolioEnv(gym.Env):
             dtype=np.float32,
         )
 
+        # Observation
+        obs_size = (
+                self.windows.shape[1] *
+                self.windows.shape[2]
+                + self.n_assets
+        )
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.windows.shape[1], self.windows.shape[2]), # (3000, 15, 30) -> (15, 30)
+            shape=(obs_size,), # (3000, 19, 30) -> (19, 30)
             dtype=np.float32,
         )
 
@@ -47,7 +54,9 @@ class PortfolioEnv(gym.Env):
         return self._get_obs(), {}
 
     def _get_obs(self):
-        return self.windows[self.current_step].astype(np.float32)
+        market_obs = self.windows[self.current_step].astype(np.float32)
+        portfolio_state = self.prev_weights.astype(np.float32)
+        return np.concatenate([market_obs.flatten(),portfolio_state])
 
     def _softmax(self, x):
         x = np.array(x)
@@ -65,17 +74,13 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns.append(portfolio_return) # store for risk
 
         # compute reward
-        benchmark_return = next_returns[0]
-        excess_return = portfolio_return - benchmark_return
-        # reward = excess_return
         reward = portfolio_return
         reward -= self.transaction_cost * turnover
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
-            vol = np.std(recent_returns)
-            #reward -= self.risk_lambda * vol
+            # mean_reward = return - (tx cost + risk_penalty)
             reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2
