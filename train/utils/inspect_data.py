@@ -17,7 +17,7 @@ def plot_weights(weights):
     plt.title("PPO Portfolio Weights")
     plt.xlabel("Trading Days")
     plt.ylabel("Weight")
-    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ"])
+    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
     plt.grid(True)
     plt.show()
 
@@ -44,3 +44,19 @@ def inspect_observation(window):
     ])
     plt.grid(True)
     plt.show()
+
+def plot_cash_weight(weights):
+    """
+    Plot cash allocation over time
+    weights shape: (timesteps, assets)
+    Last column is CASH.
+    """
+    cash_weights = weights[:, -1]
+    plt.figure(figsize=(10, 4))
+    plt.plot(cash_weights)
+    plt.title("Cash Allocation Over Time")
+    plt.xlabel("Trading Days")
+    plt.ylabel("Cash Weight")
+    plt.grid(True)
+    plt.show()
+    

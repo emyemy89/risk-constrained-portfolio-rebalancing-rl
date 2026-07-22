@@ -1,7 +1,7 @@
 from stable_baselines3 import PPO
 
 from train.evaluate import *
-from train.inspect_data import  plot_portfolios, plot_weights
+from train.utils.inspect_data import  plot_portfolios, plot_weights, plot_cash_weight
 
 
 def run_debugging_info(model, test_env, test_returns):
@@ -26,8 +26,8 @@ def run_debugging_info(model, test_env, test_returns):
     for k, v in metrics.items():
         print(f"{k}: {v:.4f}")
 
-    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0]))
-    equal = evaluate_baseline(test_returns, np.ones(5) / 5)
+    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
+    equal = evaluate_baseline(test_returns, np.ones(6) / 6)
     print("PPO:", metrics)
     print("SPY:", spy)
     print("Equal:", equal)
@@ -35,11 +35,12 @@ def run_debugging_info(model, test_env, test_returns):
     weight_statistics(results["weights"])
     turnover_statistics(results["weights"])
     equal_weight_distance(results["weights"])
+    cash_statistics(results["weights"], test_returns)
 
     # plot portfolio values
     ppo_values = results["portfolio_values"]
-    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0])
-    equal_returns = test_returns @ (np.ones(5) / 5)
+    spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
+    equal_returns = test_returns @ (np.ones(6) / 6)
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
     plot_portfolios({
@@ -50,3 +51,4 @@ def run_debugging_info(model, test_env, test_returns):
 
     # plot weights
     plot_weights(results["weights"])
+    plot_cash_weight(results["weights"])

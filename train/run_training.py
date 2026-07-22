@@ -3,8 +3,8 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
 from train.make_env import make_envs
-from train.inspect_data import inspect_observation
-from train.run_info import run_debugging_info
+from train.utils.inspect_data import inspect_observation
+from train.utils.run_info import run_debugging_info
 
 def run_training():
     # Data Loading
