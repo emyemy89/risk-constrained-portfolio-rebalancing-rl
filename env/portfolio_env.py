@@ -59,11 +59,6 @@ class PortfolioEnv(gym.Env):
         portfolio_state = self.prev_weights.astype(np.float32)
         return np.concatenate([market_obs.flatten(),portfolio_state])
 
-    def _softmax(self, x):
-        x = np.array(x)
-        exp_x = np.exp(x - np.max(x))
-        return exp_x / np.sum(exp_x)
-
     def step(self, action):
         # (St, action) -> (St+1, reward)
         # we must enforce weights>=0 and sum(weights)=1
