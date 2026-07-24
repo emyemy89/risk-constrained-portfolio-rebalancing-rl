@@ -61,8 +61,10 @@ class PortfolioEnv(gym.Env):
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        # we must enforce weights>=0 and sum(weights)=1
-        weights = self._softmax(action)
+        delta_weights = action * self.max_weight_change # action represents allocation changes
+        weights = self.prev_weights + delta_weights
+        weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
+        weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
         next_returns = self.returns[self.current_step + 1]
         portfolio_return = np.dot(weights, next_returns) # e.g. 0.5TLT + 0.5SPY
@@ -76,7 +78,6 @@ class PortfolioEnv(gym.Env):
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
-            # mean_reward = return - (tx cost + risk_penalty)
             reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2
