@@ -24,9 +24,10 @@ class PortfolioEnv(gym.Env):
         self.transaction_cost = transaction_cost
 
         # Action
+        self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
         self.action_space = spaces.Box(
-            low=-10,
-            high=10,
+            low=-1,
+            high=1,
             shape=(self.n_assets,),
             dtype=np.float32,
         )
