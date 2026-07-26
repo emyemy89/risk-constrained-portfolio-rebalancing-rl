@@ -36,7 +36,7 @@ def run_debugging_info(model, test_env, test_returns):
     turnover_statistics(results["weights"])
     equal_weight_distance(results["weights"])
     cash_statistics(results["weights"], test_returns)
-    regime_analysis(results["weights_history"], test_returns)
+    regime_analysis(results["weights"], test_returns)
 
     # plot portfolio values
     ppo_values = results["portfolio_values"]
