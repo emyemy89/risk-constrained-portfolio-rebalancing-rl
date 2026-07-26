@@ -143,3 +143,20 @@ def cash_statistics(weights, returns):
     print(f"High cash periods future return: {high_cash.mean():.5f}")
     print(f"Low cash periods future return : {low_cash.mean():.5f}")
 
+def regime_analysis(weights, returns):
+    """
+    Compare portfolio allocation during SPY up/down days.
+    """
+    spy_returns = returns[:, 0]  # SPY is first asset
+    bull_periods = spy_returns > 0
+    bear_periods = spy_returns < 0
+    bull_weights = weights[bull_periods]
+    bear_weights = weights[bear_periods]
+    print("\nBull market allocation")
+    print("--------------------------------")
+    print(np.mean(bull_weights, axis=0))
+    print("\nBear market allocation")
+    print("--------------------------------")
+    print(np.mean(bear_weights, axis=0))
+
+
