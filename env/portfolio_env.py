@@ -10,7 +10,7 @@ class PortfolioEnv(gym.Env):
             windows,
             returns,
             initial_cash=1.0,
-            risk_lambda=0.1,
+            risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.001,
     ):
@@ -24,9 +24,10 @@ class PortfolioEnv(gym.Env):
         self.transaction_cost = transaction_cost
 
         # Action
+        self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
         self.action_space = spaces.Box(
-            low=-10,
-            high=10,
+            low=-1,
+            high=1,
             shape=(self.n_assets,),
             dtype=np.float32,
         )
@@ -58,15 +59,12 @@ class PortfolioEnv(gym.Env):
         portfolio_state = self.prev_weights.astype(np.float32)
         return np.concatenate([market_obs.flatten(),portfolio_state])
 
-    def _softmax(self, x):
-        x = np.array(x)
-        exp_x = np.exp(x - np.max(x))
-        return exp_x / np.sum(exp_x)
-
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        # we must enforce weights>=0 and sum(weights)=1
-        weights = self._softmax(action)
+        delta_weights = action * self.max_weight_change # action represents allocation changes
+        weights = self.prev_weights + delta_weights
+        weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
+        weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
         next_returns = self.returns[self.current_step + 1]
         portfolio_return = np.dot(weights, next_returns) # e.g. 0.5TLT + 0.5SPY
@@ -80,7 +78,6 @@ class PortfolioEnv(gym.Env):
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
-            # mean_reward = return - (tx cost + risk_penalty)
             reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
         terminated = self.current_step >= len(self.windows) - 2

@@ -16,3 +16,4 @@ So sth like: repeat until N environment steps:
         Save best model
 
 use ´tensorboard --logdir logs/tensorboard` for logs
+use `rm -rf logs models` to delete old artifacts
