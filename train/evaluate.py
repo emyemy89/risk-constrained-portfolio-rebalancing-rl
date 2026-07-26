@@ -147,6 +147,9 @@ def regime_analysis(weights, returns):
     """
     Compare portfolio allocation during SPY up/down days.
     """
+    min_len = min(len(weights), len(returns)) # Align the assets
+    weights = weights[:min_len]
+    returns = returns[:min_len]
     spy_returns = returns[:, 0]  # SPY is first asset
     bull_periods = spy_returns > 0
     bear_periods = spy_returns < 0
