@@ -10,7 +10,7 @@ class PortfolioEnv(gym.Env):
             windows,
             returns,
             initial_cash=1.0,
-            risk_lambda=0.1,
+            risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.001,
     ):
