@@ -13,7 +13,7 @@ def plot_portfolios(strategy_values):
 
 def plot_weights(weights):
     plt.figure(figsize=(10,5))
-    plt.plot(weights)
+    plt.stackplot(range(len(weights)),weights.T, labels=["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
     plt.title("PPO Portfolio Weights")
     plt.xlabel("Trading Days")
     plt.ylabel("Weight")

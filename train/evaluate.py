@@ -44,7 +44,6 @@ def evaluate_portfolio(model, env):
         portfolio_values.append(info["portfolio_value"])
         weights_history.append(info["weights"])
         rewards.append(reward)
-        #daily_returns.append(info["cumm_return"])
         daily_returns.append(info["step_return"])
         done = terminated or truncated
     return {
