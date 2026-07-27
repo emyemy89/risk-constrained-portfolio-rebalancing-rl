@@ -19,6 +19,7 @@ y_train = train_returns[1:, 0]
 
 
 X_val = val_windows.reshape(val_windows.shape[0],-1)
+X_val = X_val[:-1]
 y_val = val_returns[1:, 0]
 
 # train rnd forest
