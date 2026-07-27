@@ -23,7 +23,7 @@ X_val = X_val[:-1]
 y_val = val_returns[1:, 0]
 
 # train rnd forest
-model = RandomForestRegressor(n_estimators=200, random_state=42)
+model = RandomForestRegressor(n_estimators=200, random_state=42, n_jobs=-1,)
 model.fit(X_train, y_train)
 
 # evaluate
