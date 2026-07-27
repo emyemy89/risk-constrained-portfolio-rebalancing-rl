@@ -1,6 +1,6 @@
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
 from data.pipeline import load_training_data
 
@@ -13,26 +13,44 @@ from data.pipeline import load_training_data
         test_returns,
     ) = load_training_data()
 
+horizon = 20 # prediction over 20 days
+future_train_returns = np.array([
+    np.sum(train_returns[i:i+horizon, 0])
+    for i in range(len(train_returns)-horizon)
+])
+
+y_train = (future_train_returns > 0).astype(int)
+
+future_val_returns = np.array([
+    np.sum(val_returns[i:i+horizon, 0])
+    for i in range(len(val_returns)-horizon)
+])
+
+y_val = (future_val_returns > 0).astype(int)
+
 X_train = train_windows.reshape(train_windows.shape[0],-1)
-X_train = X_train[:-1] # align
-y_train = train_returns[1:, 0]
-
-
 X_val = val_windows.reshape(val_windows.shape[0],-1)
-X_val = X_val[:-1]
-y_val = val_returns[1:, 0]
+X_val = X_val[:len(y_val)]
+
+X_train = X_train[:len(y_train)]
+X_val = X_val[:len(y_val)]
+
+
+
+
 
 # train rnd forest
-model = RandomForestRegressor(n_estimators=200, random_state=42, n_jobs=-1,)
+model = RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1,)
 model.fit(X_train, y_train)
 
 # evaluate
 pred = model.predict(X_val)
-rmse = np.sqrt(mean_squared_error(y_val, pred))
-print("RMSE:", rmse)
+accuracy = accuracy_score(y_val, pred)
+print("Accuracy:", accuracy)
 
 # compare against naive prediction
-baseline_pred = np.zeros_like(y_val)
+majority_class = np.bincount(y_val).argmax()
+baseline_pred = np.full(len(y_val), majority_class)
+baseline_accuracy = accuracy_score(y_val, baseline_pred)
 
-baseline_rmse = np.sqrt(mean_squared_error(y_val, baseline_pred))
-print("Baseline RMSE:", baseline_rmse)
+print("Baseline accuracy:", baseline_accuracy)
