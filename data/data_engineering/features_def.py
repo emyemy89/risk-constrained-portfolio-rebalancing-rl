@@ -24,7 +24,7 @@ def create_features(data, rolling_window):
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
     spy_ma50, spy_ma200 = compute_trend_regime(50, aligned_prices), compute_trend_regime(200, aligned_prices)
-
+    spy_drawdown = compute_drawdown(252, aligned_prices)
 
 
     # Combine the features
@@ -35,10 +35,9 @@ def create_features(data, rolling_window):
             momentum,
             correlations,
             spy_ma50,
-            spy_ma200
-        ],
-        axis=1,
-        keys=["ret", "vol", "mom", "corr"],
+            spy_ma200,
+            spy_drawdown,
+        ],axis=1, keys=["ret", "vol", "mom", "corr"],
     ).dropna()
     return features, log_returns.loc[features.index]
 
@@ -96,4 +95,15 @@ def compute_trend_regime(window_size, aligned_prices):
     spy_ma_ratio = spy / spy_ma # 1 → SPY above its 50-day trend<1 → SPY below its 50-day trend
     return spy_ma_ratio
 
+def compute_drawdown(window_size, aligned_prices):
+    """
+    Compute drawdown using X-day moving average
+    :param window_size:
+    :param aligned_prices:
+    :return:
+    """
+    spy = aligned_prices["SPY"]
+    rolling_max = spy.rolling(window_size).max()
+    spy_drawdown = spy / rolling_max - 1
+    return spy_drawdown
 
