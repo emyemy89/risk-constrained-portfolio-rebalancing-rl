@@ -37,7 +37,7 @@ def create_features(data, rolling_window):
             spy_ma50,
             spy_ma200,
             spy_drawdown,
-        ],axis=1, keys=["ret", "vol", "mom", "corr"],
+        ],axis=1, keys=["ret", "vol", "mom", "corr", "spy_ma50", "spy_ma200", "spy_drawdown"],
     ).dropna()
     return features, log_returns.loc[features.index]
 
