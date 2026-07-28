@@ -13,7 +13,7 @@ from data.pipeline import load_training_data
         test_returns,
     ) = load_training_data()
 
-horizon = 20 # prediction over 20 days
+horizon = 1 # prediction over 20 days
 future_train_returns = np.array([
     np.sum(train_returns[i:i+horizon, :], axis=0)
     for i in range(len(train_returns)-horizon)
@@ -29,10 +29,10 @@ y_val = np.argmax(future_val_returns, axis=1)
 
 X_train = train_windows.reshape(train_windows.shape[0],-1)
 X_val = val_windows.reshape(val_windows.shape[0],-1)
-X_val = X_val[:len(y_val)]
 
-X_train = X_train[:len(y_train)]
 X_val = X_val[:len(y_val)]
+X_train = X_train[:len(y_train)]
+
 
 # train rnd forest
 model = RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1,)
