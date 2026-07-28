@@ -35,10 +35,6 @@ X_val = X_val[:len(y_val)]
 X_train = X_train[:len(y_train)]
 X_val = X_val[:len(y_val)]
 
-
-
-
-
 # train rnd forest
 model = RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1,)
 model.fit(X_train, y_train)
