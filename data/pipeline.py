@@ -2,8 +2,9 @@
 # %%
 from data.extract.load_data import load_etf_data
 from data.data_engineering.processing import *
-from features.windowing import create_windows
 from data.data_engineering.features_def import create_features
+from features.windowing import create_windows
+from features.ranking_features import compute_ranking_probabilities
 
 # %%
 def load_training_data():
@@ -32,6 +33,11 @@ def load_training_data():
     val_windows, val_dates = create_windows(val_scaled, OBSERVATION_WINDOW_SIZE)
     test_windows, test_dates = create_windows(test_scaled, OBSERVATION_WINDOW_SIZE)
 
+    # Compute ranking probabilities
+    train_ranking_probs = compute_ranking_probabilities(train_windows)
+    val_ranking_probs = compute_ranking_probabilities(val_windows)
+    test_ranking_probs = compute_ranking_probabilities(test_windows)
+
     # return must match the observation, so we shift
     offset = OBSERVATION_WINDOW_SIZE - 1
 
@@ -42,8 +48,11 @@ def load_training_data():
     return (
         train_windows,
         train_returns,
+        train_ranking_probs,
         val_windows,
         val_returns,
+        val_ranking_probs,
         test_windows,
         test_returns,
+        test_ranking_probs,
     )

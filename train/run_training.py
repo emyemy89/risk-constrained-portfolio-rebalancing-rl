@@ -9,24 +9,18 @@ from train.utils.run_info import run_debugging_info
 def run_training():
     # Data Loading
     (
-        train_windows,
-        train_returns,
-        val_windows,
-        val_returns,
-        test_windows,
-        test_returns,
+        train_windows, train_returns, train_ranking_probs,
+        val_windows, val_returns, val_ranking_probs,
+        test_windows, test_returns, test_ranking_probs,
     ) = load_training_data()
     inspect_observation(train_windows[0])
 
 
     # create the environments
     train_env, val_env, test_env = make_envs(
-        train_windows,
-        train_returns,
-        val_windows,
-        val_returns,
-        test_windows,
-        test_returns,
+        train_windows, train_returns, train_ranking_probs,
+        val_windows, val_returns, val_ranking_probs,
+        test_windows, test_returns, test_ranking_probs,
     )
 
     # Evaluation callback
