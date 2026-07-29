@@ -10,6 +10,7 @@ class PortfolioEnv(gym.Env):
             self,
             windows,
             returns,
+            ranking_probs,
             initial_cash=1.0,
             risk_lambda=0.00,
             volatility_window=20,
@@ -17,13 +18,13 @@ class PortfolioEnv(gym.Env):
     ):
         self.windows = windows
         self.returns = returns
+        self.ranking_probs = ranking_probs
         self.n_assets = self.returns.shape[1]
 
         self.initial_cash = initial_cash
         self.risk_lambda = risk_lambda
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
-        self.ranking_model = joblib.load("../models/ranking_model.pkl")
 
         # Action
         self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
@@ -60,8 +61,7 @@ class PortfolioEnv(gym.Env):
     def _get_obs(self):
         market_obs = self.windows[self.current_step].astype(np.float32)
         portfolio_state = self.prev_weights.astype(np.float32)
-        ranking_input = market_obs.flatten().reshape(1, -1)
-        ranking_probabilities = self.ranking_model.predict_proba(ranking_input)[0]
+        ranking_probabilities = self.ranking_probs[self.current_step]
         return np.concatenate([
             market_obs.flatten(),
             portfolio_state,
@@ -83,6 +83,7 @@ class PortfolioEnv(gym.Env):
         # compute reward
         reward = portfolio_return
         reward -= self.transaction_cost * turnover
+        
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
