@@ -39,6 +39,7 @@ class PortfolioEnv(gym.Env):
                 self.windows.shape[1] *
                 self.windows.shape[2]
                 + self.n_assets
+                + self.n_assets
         )
         self.observation_space = spaces.Box(
             low=-np.inf,
@@ -59,7 +60,13 @@ class PortfolioEnv(gym.Env):
     def _get_obs(self):
         market_obs = self.windows[self.current_step].astype(np.float32)
         portfolio_state = self.prev_weights.astype(np.float32)
-        return np.concatenate([market_obs.flatten(),portfolio_state])
+        ranking_input = market_obs.flatten().reshape(1, -1)
+        ranking_probabilities = self.ranking_model.predict_proba(ranking_input)[0]
+        return np.concatenate([
+            market_obs.flatten(),
+            portfolio_state,
+            ranking_probabilities
+        ])
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
