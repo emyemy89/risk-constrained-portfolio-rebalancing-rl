@@ -44,7 +44,6 @@ def evaluate_portfolio(model, env):
         portfolio_values.append(info["portfolio_value"])
         weights_history.append(info["weights"])
         rewards.append(reward)
-        #daily_returns.append(info["cumm_return"])
         daily_returns.append(info["step_return"])
         done = terminated or truncated
     return {
@@ -143,4 +142,24 @@ def cash_statistics(weights, returns):
     print("-" * 60)
     print(f"High cash periods future return: {high_cash.mean():.5f}")
     print(f"Low cash periods future return : {low_cash.mean():.5f}")
+
+def regime_analysis(weights, returns):
+    """
+    Compare portfolio allocation during SPY up/down days.
+    """
+    min_len = min(len(weights), len(returns)) # Align the assets
+    weights = weights[:min_len]
+    returns = returns[:min_len]
+    spy_returns = returns[:, 0]  # SPY is first asset
+    bull_periods = spy_returns > 0
+    bear_periods = spy_returns < 0
+    bull_weights = weights[bull_periods]
+    bear_weights = weights[bear_periods]
+    print("\nBull market allocation")
+    print("--------------------------------")
+    print(np.mean(bull_weights, axis=0))
+    print("\nBear market allocation")
+    print("--------------------------------")
+    print(np.mean(bear_weights, axis=0))
+
 
