@@ -1,5 +1,6 @@
 import numpy as np
 import gymnasium as gym
+import joblib
 
 from gymnasium import spaces
 
@@ -22,6 +23,7 @@ class PortfolioEnv(gym.Env):
         self.risk_lambda = risk_lambda
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
+        self.ranking_model = joblib.load("models/ranking_model.pkl")
 
         # Action
         self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step

@@ -1,4 +1,5 @@
 import numpy as np
+import joblib
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
@@ -37,6 +38,7 @@ X_train = X_train[:len(y_train)]
 # train rnd forest
 model = RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1,)
 model.fit(X_train, y_train)
+joblib.dump(model,"models/ranking_model.pkl") # save model for ppo observation
 
 # evaluate
 pred = model.predict(X_val)
