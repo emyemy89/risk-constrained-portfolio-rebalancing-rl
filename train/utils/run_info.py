@@ -11,7 +11,7 @@ from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_we
 
 
 def run_debugging_info(model, test_env, test_returns, seed):
-    out_dir = f"../results/seed_{seed}"
+    out_dir = f"./results/seed_{seed}"
     os.makedirs(out_dir, exist_ok=True)
     log_path = os.path.join(out_dir, "debug_info.txt")
 
