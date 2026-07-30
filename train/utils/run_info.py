@@ -1,7 +1,6 @@
 import os
 import io
 import contextlib
-from datetime import datetime
 import matplotlib.pyplot as plt
 
 from stable_baselines3 import PPO
@@ -19,7 +18,6 @@ def run_debugging_info(model, test_env, test_returns, seed):
 
     with contextlib.redirect_stdout(buffer):
         print(f"=== Debug info for seed {seed} ===")
-        print(f"Generated: {datetime.now().isoformat()}\n")
 
         inspect_weights(model, test_env)
 
@@ -31,10 +29,6 @@ def run_debugging_info(model, test_env, test_returns, seed):
         print("Test cumulative return:", total_return, "\n")
 
         metrics = compute_metrics(results["portfolio_values"], results["daily_returns"])
-        print("--- PPO metrics ---")
-        for k, v in metrics.items():
-            print(f"{k}: {v:.4f}")
-        print()
 
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
         equal = evaluate_baseline(test_returns, np.ones(6) / 6)
@@ -42,6 +36,11 @@ def run_debugging_info(model, test_env, test_returns, seed):
         print("PPO:", metrics)
         print("SPY:", spy)
         print("Equal:", equal, "\n")
+
+        print("--- PPO metrics ---")
+        for k, v in metrics.items():
+            print(f"{k}: {v:.4f}")
+        print()
 
         print("--- Weight statistics ---")
         weight_statistics(results["weights"])
