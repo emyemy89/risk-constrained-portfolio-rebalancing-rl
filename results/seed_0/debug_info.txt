@@ -1,0 +1,70 @@
+=== Debug info for seed 0 ===
+Generated: 2026-07-30T15:12:05.664300
+
+weights: [0.266 0.04  0.157 0.222 0.316 0.   ] reward: 0.0006
+weights: [0.334 0.06  0.051 0.302 0.194 0.059] reward: 0.0057
+weights: [0.209 0.    0.    0.449 0.186 0.156] reward: 0.0037
+weights: [0.012 0.    0.132 0.467 0.389 0.   ] reward: 0.001
+weights: [0.    0.    0.204 0.335 0.461 0.   ] reward: -0.0033
+weights: [0.    0.101 0.17  0.21  0.519 0.   ] reward: -0.0175
+weights: [0.    0.083 0.183 0.148 0.586 0.   ] reward: 0.0152
+weights: [0.    0.    0.187 0.22  0.594 0.   ] reward: 0.0182
+weights: [0.    0.    0.11  0.392 0.498 0.   ] reward: 0.0004
+weights: [0.    0.    0.078 0.55  0.373 0.   ] reward: 0.0028
+Final portfolio value: 1.3493506262558295
+Test cumulative return: 0.34935062625582947 
+
+--- PPO metrics ---
+Annual Return: 0.0808
+Annual Volatility: 0.1377
+Sharpe Ratio: 0.5865
+Max Drawdown: -0.2277
+
+--- Baseline comparison ---
+PPO: {'Annual Return': np.float64(0.08077692344620546), 'Annual Volatility': np.float64(0.13773796898932317), 'Sharpe Ratio': np.float64(0.5864535686050876), 'Max Drawdown': np.float64(-0.22769617718257795)}
+SPY: {'Annual Return': np.float64(0.23769589914510614), 'Annual Volatility': np.float64(0.1617238737902491), 'Sharpe Ratio': np.float64(1.4697638238210298), 'Max Drawdown': np.float64(-0.21032844203783319)}
+Equal: {'Annual Return': np.float64(0.07117157574652966), 'Annual Volatility': np.float64(0.10975599310719163), 'Sharpe Ratio': np.float64(0.6484527517055123), 'Max Drawdown': np.float64(-0.20527702322367636)} 
+
+--- Weight statistics ---
+
+Weight statistics
+------------------------------------------------------------
+SPY  mean=0.349 std=0.291 min=0.000 max=0.953
+QQQ  mean=0.094 std=0.108 min=0.000 max=0.526
+TLT  mean=0.114 std=0.139 min=0.000 max=0.443
+GLD  mean=0.142 std=0.155 min=0.000 max=0.592
+VNQ  mean=0.166 std=0.171 min=0.000 max=0.582
+CASH mean=0.134 std=0.164 min=0.000 max=0.759
+
+--- Turnover statistics ---
+
+Turnover statistics
+------------------------------------------------------------
+Mean   : 0.0615
+Median : 0.0588
+Max    : 0.1943
+mean: 0.0615  std: 0.0304  min: 0.0006  max: 0.1943
+
+--- Equal weight distance ---
+
+Distance to Equal Weight
+------------------------------------------------------------
+Average L1 distance : 0.9524
+Maximum distance    : 1.5736
+
+--- Cash statistics ---
+
+Cash Timing Analysis
+------------------------------------------------------------
+High cash periods future return: 0.00089
+Low cash periods future return : -0.00020
+
+--- Regime analysis ---
+
+Bull market allocation
+--------------------------------
+[0.35476197 0.0983863  0.10732191 0.14154178 0.15681587 0.14117217]
+
+Bear market allocation
+--------------------------------
+[0.3409028  0.08963377 0.12325981 0.14364649 0.17719965 0.12535747]
