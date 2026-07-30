@@ -12,5 +12,10 @@ __pycache__/
 # Virtual environments
 .venv/
 venv/
+
+# Tensorboard
 logs/
 models/
+
+# Main statistics
+train/results/
