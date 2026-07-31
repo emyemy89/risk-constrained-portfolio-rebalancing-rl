@@ -79,8 +79,11 @@ class PortfolioEnv(gym.Env):
             self.current_step + 1 + self.reward_horizon
         ]
 
-        # compute reward
+        # Compute reward
         reward = np.sum(future_returns @ weights)
+        # Make losses more costly
+        if portfolio_return < 0:
+            reward += 0.5 * portfolio_return
         reward -= self.transaction_cost * turnover
 
         # risk penalty
