@@ -37,13 +37,13 @@ def run_debugging_info(model, test_env, test_returns, seed):
         print("SPY:", spy)
         print("Equal:", equal, "\n")
 
+        print("--- Weight statistics ---")
+        weight_statistics(results["weights"])
+
         print("--- PPO metrics ---")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
         print()
-
-        print("--- Weight statistics ---")
-        weight_statistics(results["weights"])
 
         print("\n--- Turnover statistics ---")
         turnover = turnover_statistics(results["weights"])
