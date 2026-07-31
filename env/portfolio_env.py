@@ -68,19 +68,19 @@ class PortfolioEnv(gym.Env):
         weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
         weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
+        # One-day return (used for portfolio evolution)
+        next_returns = self.returns[self.current_step + 1]
+        portfolio_return = np.dot(weights, next_returns)
+        self.portfolio_value *= np.exp(portfolio_return)
+        self.portfolio_returns.append(portfolio_return)
         # Calculate return for a set horizon
         future_returns = self.returns[
             self.current_step + 1:
             self.current_step + 1 + self.reward_horizon
         ]
-        portfolio_returns = future_returns @ weights
-
-        portfolio_return = np.sum(portfolio_returns)
-        self.portfolio_value *= np.exp(portfolio_return) # update wealth
-        self.portfolio_returns.append(portfolio_return) # store for risk
 
         # compute reward
-        reward = portfolio_return
+        reward = np.sum(future_returns @ weights)
         reward -= self.transaction_cost * turnover
 
         # risk penalty
