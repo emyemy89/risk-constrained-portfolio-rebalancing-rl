@@ -3,6 +3,44 @@ import pandas as pd
 
 from data.data_engineering.processing import align_assets
 
+def create_features(data, rolling_window):
+    """
+    Define features used in RL training.
+    Currently it holds 19 features: 5 ret, 5 vol, 5 mom, 5 corr
+    :param data:
+    :return:
+    """
+    close_prices = data["Close"]
+
+    # We need to align so all 4 ETF:s start at the same time to match future matrix
+    # For the moment, we work with only one column
+    aligned_prices = align_assets(close_prices)
+
+    # get the features
+    log_returns = compute_log_returns(aligned_prices)
+    log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
+    volatility = compute_volatility(log_returns, rolling_window)
+    momentum = compute_momentum(log_returns, rolling_window)
+    correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
+    correlations["CASH_corr_SPY"] = 0.0
+    spy_ma50, spy_ma200 = compute_trend_regime(50, aligned_prices), compute_trend_regime(200, aligned_prices)
+    spy_drawdown = compute_drawdown(252, aligned_prices)
+
+
+    # Combine the features
+    features = pd.concat(
+        [
+            log_returns,
+            volatility,
+            momentum,
+            correlations,
+            spy_ma50,
+            spy_ma200,
+            spy_drawdown,
+        ],axis=1, keys=["ret", "vol", "mom", "corr", "spy_ma50", "spy_ma200", "spy_drawdown"],
+    ).dropna()
+    return features, log_returns.loc[features.index]
+
 def compute_log_returns(aligned_prices):
     """
     Using r_t = log(P_t / P_{t-1})
@@ -47,35 +85,25 @@ def compute_correlation(log_returns, time_interval):
             )
     return correlations
 
-
-def create_features(data, rolling_window):
+def compute_trend_regime(window_size, aligned_prices):
     """
-    Define features used in RL training.
-    Currently it holds 19 features: 5 ret, 5 vol, 5 mom, 5 corr
-    :param data:
+    Compute trend regime using X-day moving average
     :return:
     """
-    close_prices = data["Close"]
-    # We need to align so all 4 ETF:s start at the same time to match future matrix
-    # For the moment, we work with only one column
-    aligned_prices = align_assets(close_prices)
-    # get the features
-    log_returns = compute_log_returns(aligned_prices)
-    log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
-    volatility = compute_volatility(log_returns, rolling_window)
-    momentum = compute_momentum(log_returns, rolling_window)
-    correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
-    correlations["CASH_corr_SPY"] = 0.0
+    spy = aligned_prices["SPY"]
+    spy_ma = spy.rolling(window_size).mean() # moving average
+    spy_ma_ratio = spy / spy_ma # 1 → SPY above its 50-day trend<1 → SPY below its 50-day trend
+    return spy_ma_ratio
 
-    # Combine the features
-    features = pd.concat(
-        [
-            log_returns,
-            volatility,
-            momentum,
-            correlations,
-        ],
-        axis=1,
-        keys=["ret", "vol", "mom", "corr"],
-    ).dropna()
-    return features, log_returns.loc[features.index]
+def compute_drawdown(window_size, aligned_prices):
+    """
+    Compute drawdown using X-day moving average
+    :param window_size:
+    :param aligned_prices:
+    :return:
+    """
+    spy = aligned_prices["SPY"]
+    rolling_max = spy.rolling(window_size).max()
+    spy_drawdown = spy / rolling_max - 1
+    return spy_drawdown
+
