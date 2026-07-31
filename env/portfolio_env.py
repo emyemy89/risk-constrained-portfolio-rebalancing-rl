@@ -13,10 +13,12 @@ class PortfolioEnv(gym.Env):
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.001,
+            reward_horizon=5,
     ):
         self.windows = windows
         self.returns = returns
         self.n_assets = self.returns.shape[1]
+        self.reward_horizon = reward_horizon
 
         self.initial_cash = initial_cash
         self.risk_lambda = risk_lambda
@@ -66,8 +68,14 @@ class PortfolioEnv(gym.Env):
         weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
         weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
-        next_returns = self.returns[self.current_step + 1]
-        portfolio_return = np.dot(weights, next_returns) # e.g. 0.5TLT + 0.5SPY
+        # Calculate return for a set horizon
+        future_returns = self.returns[
+            self.current_step + 1:
+            self.current_step + 1 + self.reward_horizon
+        ]
+        portfolio_returns = future_returns @ weights
+
+        portfolio_return = np.sum(portfolio_returns)
         self.portfolio_value *= np.exp(portfolio_return) # update wealth
         self.portfolio_returns.append(portfolio_return) # store for risk
 
@@ -80,7 +88,7 @@ class PortfolioEnv(gym.Env):
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
-        terminated = self.current_step >= len(self.windows) - 2
+        terminated = (self.current_step >=len(self.windows) - self.reward_horizon - 1)
         next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
