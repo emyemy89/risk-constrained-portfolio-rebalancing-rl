@@ -21,10 +21,10 @@ def load_training_data():
     # Train, Validation, Test
     train_features, val_features, test_features = split_data(features)
     train_returns, val_returns, test_returns = split_data(returns)
-    # Normalize using z-score standardization
-    train_scaled = scale_features(train_features)
-    val_scaled = scale_features(val_features)
-    test_scaled = scale_features(test_features) # mean is approx 0 and std_dev approx 1
+    # Normalize using z-score standardization fit on train set only
+    train_scaled, val_scaled, test_scaled = scale_features(
+        train_features, val_features, test_features
+    )
 
     # %%
     # Convert time series to window observation

@@ -64,7 +64,7 @@ def run_training():
             gae_lambda=0.95, # advantage smoothing(how are they estimated)
             clip_range=0.2, # what makes PPO "proximal" and stable.
             target_kl=0.02,
-            ent_coef=0.0, # exploration vs. value learning balance (vf_coef)
+            ent_coef=0.01, # exploration vs. value learning balance (vf_coef)
             vf_coef=0.5,
             tensorboard_log="../logs/tensorboard/", # logs
             verbose=0,
