@@ -7,6 +7,7 @@ from stable_baselines3 import PPO
 
 from train.evaluate import *
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
+from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
 def run_debugging_info(model, test_env, test_returns, seed):
@@ -29,6 +30,7 @@ def run_debugging_info(model, test_env, test_returns, seed):
         print("Test cumulative return:", total_return, "\n")
 
         metrics = compute_metrics(results["portfolio_values"], results["daily_returns"])
+        momentum_returns = run_momentum_strategy(test_returns, lookback=20)
 
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
         equal = evaluate_baseline(test_returns, np.ones(6) / 6)
@@ -40,10 +42,13 @@ def run_debugging_info(model, test_env, test_returns, seed):
         print("--- Weight statistics ---")
         weight_statistics(results["weights"])
 
-        print("--- PPO metrics ---")
+        print("\n--- PPO metrics ---")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
         print()
+
+        print("\n--- Momentum ---")
+        print(calculate_metrics(momentum_returns))
 
         print("\n--- Turnover statistics ---")
         turnover = turnover_statistics(results["weights"])
