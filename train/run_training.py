@@ -2,7 +2,7 @@ import random
 import numpy as np
 import torch
 
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_training_data
@@ -51,21 +51,34 @@ def run_training():
             deterministic=True,
             render=False,
         )
-
-        model = PPO(
+        # model = PPO(
+        #     policy="MlpPolicy",
+        #     env=train_env,
+        #     seed=seed,
+        #     learning_rate=1e-4,
+        #     n_steps=2048,  # rollout length
+        #     batch_size=64,  # mini-batch size
+        #     n_epochs=10,  # how many times PPO reuses the collected rollout
+        #     gamma=0.99,  # long-term reward discount (how much agent values future rewards)
+        #     gae_lambda=0.95,  # advantage smoothing(how are they estimated)
+        #     clip_range=0.2,  # what makes PPO "proximal" and stable.
+        #     target_kl=0.02,
+        #     ent_coef=0.01,  # exploration vs. value learning balance (vf_coef)
+        #     vf_coef=0.5,
+        #     tensorboard_log="../logs/tensorboard/",  # logs
+        #     verbose=0,
+        # )
+        model = SAC(
             policy="MlpPolicy",
             env=train_env,
             seed=seed,
-            learning_rate=1e-4,
-            n_steps=2048, # rollout length
-            batch_size=64, # mini-batch size
-            n_epochs=10, # how many times PPO reuses the collected rollout
-            gamma=0.99, # long-term reward discount (how much agent values future rewards)
-            gae_lambda=0.95, # advantage smoothing(how are they estimated)
-            clip_range=0.2, # what makes PPO "proximal" and stable.
-            target_kl=0.02,
-            ent_coef=0.01, # exploration vs. value learning balance (vf_coef)
-            vf_coef=0.5,
+            learning_rate=3e-4,
+            buffer_size=100_000,
+            learning_starts=1_000,
+            batch_size=256,
+            tau=0.005,
+            gamma=0.99,
+            ent_coef="auto",
             tensorboard_log="../logs/tensorboard/", # logs
             verbose=0,
         )
