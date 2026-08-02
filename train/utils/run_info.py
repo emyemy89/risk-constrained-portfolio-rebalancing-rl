@@ -1,55 +1,89 @@
-from stable_baselines3 import PPO
+import os
+import io
+import contextlib
+import matplotlib.pyplot as plt
+
+from stable_baselines3 import PPO, SAC
 
 from train.evaluate import *
-from train.utils.inspect_data import  plot_portfolios, plot_weights, plot_cash_weight
+from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
+from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns):
-    inspect_weights(
-        model,
-        test_env
-    )
-    best_model = PPO.load("../models/best_model", env=test_env)
-    results = evaluate_portfolio(
-        best_model,
-        test_env,
-    )
-    print(results["portfolio_values"][-1])
-    total_return = results["portfolio_values"][-1] - 1
-    print("Test cumulative return:", total_return)
+def run_debugging_info(model, test_env, test_returns, seed, model_class, rl_algorithm):
+    out_dir = f"./results/seed_{rl_algorithm}_{seed}"
+    os.makedirs(out_dir, exist_ok=True)
+    log_path = os.path.join(out_dir, "debug_info.txt")
 
-    # compute metrics eval
-    metrics = compute_metrics(
-        results["portfolio_values"],
-        results["daily_returns"],
-    )
-    for k, v in metrics.items():
-        print(f"{k}: {v:.4f}")
+    buffer = io.StringIO()
 
-    spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
-    equal = evaluate_baseline(test_returns, np.ones(6) / 6)
-    print("PPO:", metrics)
-    print("SPY:", spy)
-    print("Equal:", equal)
+    with contextlib.redirect_stdout(buffer):
+        print(f"=== Debug info for seed {seed} ===")
 
-    weight_statistics(results["weights"])
-    turnover_statistics(results["weights"])
-    equal_weight_distance(results["weights"])
-    cash_statistics(results["weights"], test_returns)
-    regime_analysis(results["weights"], test_returns)
+        inspect_weights(model, test_env)
 
-    # plot portfolio values
-    ppo_values = results["portfolio_values"]
+        best_model = model_class.load(f"../models/best_model_seed_{rl_algorithm}_{seed}/best_model", env=test_env)
+        results = evaluate_portfolio(best_model, test_env)
+
+        print("Final portfolio value:", results["portfolio_values"][-1])
+        total_return = results["portfolio_values"][-1] - 1
+        print("Test cumulative return:", total_return, "\n")
+
+        metrics = compute_metrics(results["portfolio_values"], results["daily_returns"])
+        momentum_returns = run_momentum_strategy(test_returns, lookback=20)
+
+        spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
+        equal = evaluate_baseline(test_returns, np.ones(6) / 6)
+        print("--- Baseline comparison ---")
+        print(f"{rl_algorithm}:", metrics)
+        print("SPY:", spy)
+        print("Equal:", equal, "\n")
+
+        print("--- Weight statistics ---")
+        weight_statistics(results["weights"])
+
+        print(f"\n--- {rl_algorithm} metrics ---")
+        for k, v in metrics.items():
+            print(f"{k}: {v:.4f}")
+        print()
+
+        print("\n--- Momentum ---")
+        print(calculate_metrics(momentum_returns))
+
+        print("\n--- Turnover statistics ---")
+        turnover = turnover_statistics(results["weights"])
+        # this one returns an array -> summarize instead of dumping raw numbers
+        print(f"mean: {np.mean(turnover):.4f}  std: {np.std(turnover):.4f}  "
+              f"min: {np.min(turnover):.4f}  max: {np.max(turnover):.4f}")
+
+        print("\n--- Equal weight distance ---")
+        equal_weight_distance(results["weights"])
+
+        print("\n--- Cash statistics ---")
+        cash_statistics(results["weights"], test_returns)
+
+        print("\n--- Regime analysis ---")
+        regime_analysis(results["weights"], test_returns)
+
+    output = buffer.getvalue()
+    print(output)  # still show it in console
+
+    with open(log_path, "w") as f:
+        f.write(output)
+    print(f"\nSaved debug info to {log_path}")
+
+    # plots
+    rl_algorithm_values = results["portfolio_values"]
     spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
     equal_returns = test_returns @ (np.ones(6) / 6)
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
-    plot_portfolios({
-        "PPO": ppo_values,
-        "SPY": spy_values,
-        "Equal Weight": equal_values,
-    })
 
-    # plot weights
+    plot_portfolios({f"{rl_algorithm}": rl_algorithm_values, "SPY": spy_values, "Equal Weight": equal_values})
+    plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
+
     plot_weights(results["weights"])
+    plt.savefig(os.path.join(out_dir, "weights.png"))
+
     plot_cash_weight(results["weights"])
+    plt.savefig(os.path.join(out_dir, "cash_weight.png"))
