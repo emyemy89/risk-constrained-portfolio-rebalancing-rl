@@ -3,14 +3,14 @@ import io
 import contextlib
 import matplotlib.pyplot as plt
 
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 
 from train.evaluate import *
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
 from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed):
+def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
     out_dir = f"./results/seed_{seed}"
     os.makedirs(out_dir, exist_ok=True)
     log_path = os.path.join(out_dir, "debug_info.txt")
@@ -22,7 +22,7 @@ def run_debugging_info(model, test_env, test_returns, seed):
 
         inspect_weights(model, test_env)
 
-        best_model = PPO.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
+        best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
         results = evaluate_portfolio(best_model, test_env)
 
         print("Final portfolio value:", results["portfolio_values"][-1])
