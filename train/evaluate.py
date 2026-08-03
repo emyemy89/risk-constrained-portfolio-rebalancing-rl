@@ -1,8 +1,18 @@
+"""
+Evaluation utilities for RL portfolio models.
+
+This module contains functions for evaluating the RL agents.
+These include calculating portfolio performance metrics, comparing against baselines,
+and analyzing portfolio behavior such as allocation, turnover, and
+market regime sensitivity.
+"""
 import numpy as np
 
 def evaluate_model(model, env, num_episodes=5):
     """
-    Runs deterministic eval, returns mean episode return
+    Eval an RL model over multiple episodes
+    Runs deterministic eval, compute mean cumulative reward
+    :return: mean episode return
     """
     episode_returns = []
     for _ in range(num_episodes):
@@ -18,6 +28,13 @@ def evaluate_model(model, env, num_episodes=5):
     return float(np.mean(episode_returns))
 
 def inspect_weights(model, env, n_steps=10):
+    """
+    Print portfolio allocation selected by model
+    :param model:
+    :param env:
+    :param n_steps:
+    :return:
+    """
     obs, _ = env.reset()
     for _ in range(n_steps):
         action, _ = model.predict(obs, deterministic=True)
@@ -32,6 +49,9 @@ def inspect_weights(model, env, n_steps=10):
             break
 
 def evaluate_portfolio(model, env):
+    """
+    Run a deterministic eval and collect portfolio history
+    """
     obs, _ = env.reset()
     portfolio_values = []
     weights_history = []
@@ -54,6 +74,10 @@ def evaluate_portfolio(model, env):
     }
 
 def evaluate_baseline(returns, weights):
+    """
+    Evaluate a static portfolio allocation baseline.
+    :return: portfolio performance metrics
+    """
     step_returns = returns @ weights
     portfolio_values = np.exp(np.cumsum(step_returns))
     metrics = compute_metrics(
@@ -63,6 +87,13 @@ def evaluate_baseline(returns, weights):
     return metrics
 
 def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
+    """
+    Calculate standard portfolio performance metrics.
+    :param portfolio_values: Portfolio value history
+    :param daily_returns: Daily portfolio returns
+    :param risk_free_rate: Annual risk-free rate used for Sharpe ratio calculation.
+    :return: Annual return, annual volatility, sharpe ratio, and maximum drawdown
+    """
     annual_return = portfolio_values[-1] ** (252 / len(daily_returns)) - 1
     annual_vol = np.std(daily_returns) * np.sqrt(252)
     sharpe = (
@@ -82,10 +113,6 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
 def weight_statistics(weights):
     """
     Print summary statistics for portfolio weights
-    Parameters
-    ----------
-    weights : ndarray
-        Shape (T, n_assets)
     """
     asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"]
     print("\nWeight statistics")
@@ -115,8 +142,6 @@ def turnover_statistics(weights):
 def equal_weight_distance(weights):
     """
     Compute equal weight distance
-    :param weights:
-    :return:
     """
     equal = np.ones(weights.shape[1]) / weights.shape[1]
     distance = np.abs(weights - equal).sum(axis=1)
