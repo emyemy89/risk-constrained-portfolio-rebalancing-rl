@@ -36,6 +36,9 @@ def load_training_data(obs_widow_size = 30, rolling_window = 20):
     )
 
     # Convert time series to window observation
+    train_windows, train_dates = create_windows(train_scaled, obs_widow_size)
+    val_windows, val_dates = create_windows(val_scaled, obs_widow_size)
+    test_windows, test_dates = create_windows(test_scaled, obs_widow_size)
 
     # return must match the observation, so we shift
     offset = obs_widow_size - 1
