@@ -10,7 +10,7 @@ from train.make_env import make_envs
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 
-def run_training(rl_algorithm="SAC"):
+def run_training(rl_algorithm="PPO"):
     # Seeds for reproducibility
     SEEDS = [0, 1, 2, 3, 4]
     for seed in SEEDS:
@@ -86,7 +86,7 @@ def run_training(rl_algorithm="SAC"):
             )
 
         model.learn(
-            total_timesteps=10_000,
+            total_timesteps=200_000,
             callback=eval_callback,
         )
 

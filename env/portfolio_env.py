@@ -74,6 +74,12 @@ class PortfolioEnv(gym.Env):
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
 
+        self.current_step = 0
+        self.portfolio_value = initial_cash
+        self.prev_weights = np.ones(self.n_assets) / self.n_assets
+        self.portfolio_returns = []
+        self.initial_value = initial_cash
+
         # Action
         self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
         self.action_space = spaces.Box(
@@ -139,6 +145,7 @@ class PortfolioEnv(gym.Env):
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
+        # Move to next step
         self.current_step += 1
         terminated = self.current_step >=len(self.windows) - self.reward_horizon - 1
         next_obs = self._get_obs()
