@@ -1,6 +1,16 @@
+"""
+Visualization utilities for the experiments.
+
+This module provides plotting functions for different goals, including comparing
+portfolio performance, visualizing asset allocations, inspecting observation windows,
+and analyzing cash allocation behavior over time.
+"""
 import matplotlib.pyplot as plt
 
 def plot_portfolios(strategy_values):
+    """
+    Plot portfolio value evolution for multiple strategies.
+    """
     plt.figure(figsize=(10, 5))
     for name, values in strategy_values.items():
         plt.plot(values, label=name)
@@ -12,6 +22,12 @@ def plot_portfolios(strategy_values):
     plt.show()
 
 def plot_weights(weights):
+    """
+    Plot portfolio allocation changes over time.
+
+    Creates a stacked area chart showing how the portfolio weights of each
+    asset evolve during evaluation.
+    """
     plt.figure(figsize=(10,5))
     plt.stackplot(range(len(weights)),weights.T, labels=["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
     plt.title("PPO Portfolio Weights")
@@ -59,4 +75,3 @@ def plot_cash_weight(weights):
     plt.ylabel("Cash Weight")
     plt.grid(True)
     plt.show()
-    
