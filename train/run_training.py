@@ -1,3 +1,14 @@
+"""
+The training pipeline for RL models.
+
+This module coordinates the complete training process:
+- setting random seeds for reproducibility
+- loading and inspecting market data
+- creating training, validation, and test environments
+- initializing PPO or SAC agents
+- evaluating models during training
+- saving trained models and running post-training diagnostics
+"""
 import random
 import numpy as np
 import torch
@@ -10,10 +21,25 @@ from train.make_env import make_envs
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 
+seeds = [0, 1, 2, 3, 4]
+
 def run_training(rl_algorithm="PPO"):
+    """
+        Train RL agents for portfolio allocation.
+
+        The function trains multiple agents using different random seeds to
+        evaluate robustness. For each seed, it creates independent environments,
+        trains either a PPO/SAC model, evaluates performance on a validation
+        environment, saves the final model, and runs debugging analysis on the
+        test environment.
+
+        rl_algorithm : str
+            RL algorithm to use. Supported values are:
+            - "PPO" for Proximal Policy Optimization
+            - "SAC" for Soft Actor-Critic
+        """
     # Seeds for reproducibility
-    SEEDS = [0, 1, 2, 3, 4]
-    for seed in SEEDS:
+    for seed in seeds:
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -42,7 +68,8 @@ def run_training(rl_algorithm="PPO"):
         val_env.reset(seed=seed)
 
         # Evaluation callback
-        # pauses training -> runs policy on val env -> computes avg performance -> saves best model(if improved)
+        # pauses training -> runs policy on val env ->
+        # computes avg performance -> saves best model(if improved)
         eval_callback = EvalCallback(
             val_env,
             best_model_save_path=f"../models/best_model_seed_{seed}/",
@@ -94,8 +121,9 @@ def run_training(rl_algorithm="PPO"):
         # final_model is the state after the last update
         model.save(f"../models/final_model_seed_{seed}")
 
-        run_debugging_info(model, test_env, test_returns, seed, PPO if isinstance(model, PPO) else SAC)
+        run_debugging_info(
+            model, test_env, test_returns, seed, PPO if isinstance(model, PPO) else SAC
+        )
 
 if __name__ == "__main__":
     run_training()
-
