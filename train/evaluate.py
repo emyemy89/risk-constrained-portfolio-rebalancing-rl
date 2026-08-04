@@ -186,5 +186,3 @@ def regime_analysis(weights, returns):
     print("\nBear market allocation")
     print("--------------------------------")
     print(np.mean(bear_weights, axis=0))
-
-
