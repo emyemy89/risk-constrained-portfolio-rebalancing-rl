@@ -1,10 +1,59 @@
+"""
+Portfolio's environment.
+
+This module defines a Gymnasium-compatible environment for training RL agents to dynamically
+rebalance the multi-asset portfolio.
+The environment exposes historical market observations and portfolio allocations as states. It
+accepts allocation adjustment actions. The rewards are returned based on future portfolio
+performance, transaction costs, and optional risk penalties.
+"""
 import numpy as np
 import gymnasium as gym
-
 from gymnasium import spaces
 
 
 class PortfolioEnv(gym.Env):
+    """
+    The agent observes a rolling window of market features together with the
+    current portfolio weights and outputs allocation adjustments for each asset.
+    The environment updates the portfolio, calculates returns, applies
+    transaction costs and risk penalties, and provides a reward signal based
+    on future portfolio performance.
+
+    The action space represents relative changes to current portfolio weights.
+    At the same time the resulting weights are clipped to valid allocations and
+    normalized to maintain a fully invested portfolio.
+
+    Observation:
+        Flattened historical market window concatenated with current asset
+        allocation weights.
+
+    Action:
+        Continuous allocation adjustments for each asset in the range [-1, 1].
+        The actual weight change is limited by `max_weight_change`.
+
+    Reward:
+        Future portfolio return over `reward_horizon` steps, adjusted for:
+        - transaction costs based on portfolio turnover
+        - additional penalty for negative daily returns
+        - optional volatility-based risk penalty
+
+    Args:
+        windows(np.array): Rolling market feature windows with shape
+                           (timesteps, window_size, n_features).
+
+        returns(np.array): Asset return matrix with shape (timesteps, n_assets).
+
+        initial_cash(float): Initial portfolio value.
+
+        risk_lambda(float): Weight of the volatility penalty in the reward.
+
+        volatility_window(int): Number of past returns used to estimate portfolio volatility.
+
+        transaction_cost(float):Cost applied to portfolio turnover.
+
+        reward_horizon (int): Number of future steps used when calculating rewards.
+        """
     def __init__(
             self,
             windows,
@@ -13,15 +62,23 @@ class PortfolioEnv(gym.Env):
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.001,
+            reward_horizon=5,
     ):
         self.windows = windows
         self.returns = returns
         self.n_assets = self.returns.shape[1]
+        self.reward_horizon = reward_horizon
 
         self.initial_cash = initial_cash
         self.risk_lambda = risk_lambda
         self.volatility_window = volatility_window
         self.transaction_cost = transaction_cost
+
+        self.current_step = 0
+        self.portfolio_value = initial_cash
+        self.prev_weights = np.ones(self.n_assets) / self.n_assets
+        self.portfolio_returns = []
+        self.initial_value = initial_cash
 
         # Action
         self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
@@ -66,21 +123,31 @@ class PortfolioEnv(gym.Env):
         weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
         weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
+        # One-day return (used for portfolio evolution)
         next_returns = self.returns[self.current_step + 1]
-        portfolio_return = np.dot(weights, next_returns) # e.g. 0.5TLT + 0.5SPY
-        self.portfolio_value *= np.exp(portfolio_return) # update wealth
-        self.portfolio_returns.append(portfolio_return) # store for risk
+        portfolio_return = np.dot(weights, next_returns)
+        self.portfolio_value *= np.exp(portfolio_return)
+        self.portfolio_returns.append(portfolio_return)
+        # Calculate return for a set horizon
+        future_returns = self.returns[
+            self.current_step + 1:
+            self.current_step + 1 + self.reward_horizon
+        ]
 
-        # compute reward
-        reward = portfolio_return
+        # Compute reward
+        reward = np.sum(future_returns @ weights)
+        # Make losses more costly
+        if portfolio_return < 0:
+            reward += 0.5 * portfolio_return
         reward -= self.transaction_cost * turnover
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
+        # Move to next step
         self.current_step += 1
-        terminated = self.current_step >= len(self.windows) - 2
+        terminated = self.current_step >=len(self.windows) - self.reward_horizon - 1
         next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
