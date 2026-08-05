@@ -62,7 +62,7 @@ class PortfolioEnv(gym.Env):
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.0005,
-            reward_horizon=5,
+            reward_horizon=10,
     ):
         self.windows = windows
         self.returns = returns
