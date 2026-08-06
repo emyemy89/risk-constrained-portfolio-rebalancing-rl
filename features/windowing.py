@@ -1,3 +1,11 @@
+"""
+Utilities for generating rolling time-series observation windows.
+
+This module provides functions for transforming feature dataframes into
+sequential windows. This makes them suitable for the reinforcement learning
+models. Rolling windows preserve temporal information by including a fixed
+number of previous timesteps in each observation.
+"""
 import numpy as np
 import pandas as pd
 
