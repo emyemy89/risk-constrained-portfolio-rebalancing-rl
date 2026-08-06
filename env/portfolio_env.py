@@ -62,7 +62,7 @@ class PortfolioEnv(gym.Env):
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.0005,
-            reward_horizon=10,
+            reward_horizon=1,
     ):
         self.windows = windows
         self.returns = returns
@@ -124,11 +124,16 @@ class PortfolioEnv(gym.Env):
         weights /= np.sum(weights) # normalize
         # Use Turnover=1/2 ∑ ∣ w_{i,t} −w{i,t-1} ∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
+
         # One-day return (used for portfolio evolution)
         next_returns = self.returns[self.current_step + 1]
         portfolio_return = np.dot(weights, next_returns)
-        self.portfolio_value *= np.exp(portfolio_return)
-        self.portfolio_returns.append(portfolio_return)
+        # Deduct transaction costs from wealth
+        cost = self.transaction_cost * turnover
+        self.portfolio_value *= np.exp(portfolio_return) * (1.0 - cost)
+        # Store net return for risk estimation
+        net_portfolio_return = portfolio_return + np.log1p(-cost)
+        self.portfolio_returns.append(net_portfolio_return)
         # Calculate return for a set horizon
         future_returns = self.returns[
             self.current_step + 1:
@@ -137,10 +142,10 @@ class PortfolioEnv(gym.Env):
 
         # Compute reward
         reward = np.sum(future_returns @ weights)
+        reward -= cost
         # Make losses more costly
         if portfolio_return < 0:
             reward += 0.5 * portfolio_return
-        reward -= self.transaction_cost * turnover
 
         # risk penalty
         if len(self.portfolio_returns) >= self.volatility_window:
