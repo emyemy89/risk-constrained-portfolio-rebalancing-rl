@@ -13,7 +13,7 @@ from data.data_engineering.processing import align_assets
 def create_features(data, rolling_window):
     """
     Combines all features used in RL training
-    Currently it holds 19 features: 5 ret, 5 vol, 5 mom, 5 corr
+    Currently it holds 38 features: 5 ret, 5 vol, 15 mom, 5 corr
     :param data: the ETF data being used
     :return: features, log_returns
     """
@@ -26,8 +26,11 @@ def create_features(data, rolling_window):
     # get the features
     log_returns = compute_log_returns(aligned_prices)
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
+
     volatility = compute_volatility(log_returns, rolling_window)
-    momentum = compute_momentum(log_returns, rolling_window)
+
+    momentum = compute_momentum(log_returns, windows=(21, 63, 252))
+
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
     spy_ma50 = compute_trend_regime(50, aligned_prices)
@@ -68,13 +71,21 @@ def compute_volatility(log_returns, time_interval):
     volatility = log_returns.rolling(time_interval).std()  # volatility = 0.009785 ==> 0.97%
     return volatility
 
-def compute_momentum(log_returns, time_interval):
+def compute_momentum(log_returns, windows):
     """
     We add momentum to observe the general direction, up or down
     (momentum is supposed to be smaller than volatility, because avg_return << std_dev)
+    Momentum is cumulative past return:
+    exp(sum(log_returns)) - 1
     """
-    momentum = log_returns.rolling(time_interval).mean()
-    return momentum
+    momentum_features = {}
+    for window in windows:
+        momentum = np.exp(
+            log_returns.rolling(window).sum()
+        ) - 1
+        for asset in log_returns.columns:
+            momentum_features[f"{asset}_mom_{window}d"] = momentum[asset]
+    return pd.DataFrame(momentum_features)
 
 def compute_correlation(log_returns, time_interval):
     """
