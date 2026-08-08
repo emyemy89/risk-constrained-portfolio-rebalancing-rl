@@ -1,3 +1,10 @@
+"""Feature engineering utilities for portfolio.
+
+This module transforms aligned asset price data into model-ready features,
+including log returns, volatility, momentum, rolling correlations, trend
+regimes, and drawdown indicators.
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -5,10 +12,10 @@ from data.data_engineering.processing import align_assets
 
 def create_features(data, rolling_window):
     """
-    Define features used in RL training.
+    Combines all features used in RL training
     Currently it holds 19 features: 5 ret, 5 vol, 5 mom, 5 corr
-    :param data:
-    :return:
+    :param data: the ETF data being used
+    :return: features, log_returns
     """
     close_prices = data["Close"]
 
@@ -23,7 +30,8 @@ def create_features(data, rolling_window):
     momentum = compute_momentum(log_returns, rolling_window)
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
-    spy_ma50, spy_ma200 = compute_trend_regime(50, aligned_prices), compute_trend_regime(200, aligned_prices)
+    spy_ma50 = compute_trend_regime(50, aligned_prices)
+    spy_ma200 = compute_trend_regime(200, aligned_prices)
     spy_drawdown = compute_drawdown(252, aligned_prices)
 
 
@@ -43,6 +51,7 @@ def create_features(data, rolling_window):
 
 def compute_log_returns(aligned_prices):
     """
+    Compute log returns of each asset in aligned_prices
     Using r_t = log(P_t / P_{t-1})
     Remove the first NaN raw
     """
@@ -51,9 +60,10 @@ def compute_log_returns(aligned_prices):
 
 def compute_volatility(log_returns, time_interval):
     """
-     Seeing only today's return is not relevant enough
-     We also care to see how turbulent has the asset been recently
-     we compute the std_dev or returns σ_t=std(r_t−19,...,r_t), 20 is approx. 1 month of trades
+    Compute volatility of each asset in aligned_prices
+    Seeing only today's return is not relevant enough
+    We also care to see how turbulent has the asset been recently
+    we compute the std_dev or returns σ_t=std(r_t−19,...,r_t), 20 is approx. 1 month of trades
     """
     volatility = log_returns.rolling(time_interval).std()  # volatility = 0.009785 ==> 0.97%
     return volatility
@@ -106,4 +116,3 @@ def compute_drawdown(window_size, aligned_prices):
     rolling_max = spy.rolling(window_size).max()
     spy_drawdown = spy / rolling_max - 1
     return spy_drawdown
-
