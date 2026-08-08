@@ -119,9 +119,11 @@ class PortfolioEnv(gym.Env):
     def step(self, action):
         # (St, action) -> (St+1, reward)
         delta_weights = action * self.max_weight_change # action represents allocation changes
+
+        # Normalization
         weights = self.prev_weights + delta_weights
-        weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
-        weights /= np.sum(weights) # normalize
+        weights = project_to_simplex(weights)
+
         # Use Turnover=1/2 ∑ ∣ w_{i,t} −w{i,t-1} ∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
 
@@ -140,23 +142,25 @@ class PortfolioEnv(gym.Env):
             self.current_step + 1 + self.reward_horizon
         ]
 
-        # Compute reward
+        # Compute Reward
         reward = np.sum(future_returns @ weights)
         reward -= cost
         # Make losses more costly
         if portfolio_return < 0:
             reward += 0.5 * portfolio_return
 
-        # risk penalty
+        # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
+
         # Move to next step
         self.current_step += 1
         terminated = self.current_step >=len(self.windows) - self.reward_horizon - 1
         next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
+
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
@@ -164,10 +168,4 @@ class PortfolioEnv(gym.Env):
             "episode_return": episode_return,
             "step_return": portfolio_return,
         }
-        return (
-            next_obs,
-            reward,
-            terminated,
-            False,  # truncated
-            info
-        )
+        return next_obs, reward, terminated, False, info
