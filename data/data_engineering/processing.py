@@ -51,11 +51,13 @@ def split_data(data, train_end, val_start, val_end):
     val_data = data.loc[val_start:val_end]
     return train_data, val_data
 
-def get_test_data(data):
+def split_test_data(data, train_end="2021-12-31", test_start="2022-01-01"):
     """
-    Return the final untouched test period.
+    Split data into final training and untouched test periods.
     """
-    return data.loc['2022-01-01':]
+    train_data = data.loc[:train_end]
+    test_data = data.loc[test_start:]
+    return train_data, test_data
 
 
 def scale_features(train_features, val_features):
