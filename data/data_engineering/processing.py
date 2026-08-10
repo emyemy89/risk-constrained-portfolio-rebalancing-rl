@@ -58,12 +58,11 @@ def get_test_data(data):
     return data.loc['2022-01-01':]
 
 
-def scale_features(train_features, val_features, test_features):
+def scale_features(train_features, val_features):
     """
     Scale features based on scaling factors
     :param train_features: The set of concatenated features of assets for training
     :param val_features: The set of concatenated features of assets for validation
-    :param test_features: The set of concatenated features of assets for testing
     :return: train_scaled, val_scaled, test_scaled
     """
     scaler = StandardScaler()
@@ -78,9 +77,5 @@ def scale_features(train_features, val_features, test_features):
         index=val_features.index,
         columns=val_features.columns,
     )
-    test_scaled = pd.DataFrame(
-        scaler.transform(test_features),
-        index=test_features.index,
-        columns=test_features.columns,
-    )
-    return train_scaled, val_scaled, test_scaled
+
+    return train_scaled, val_scaled
