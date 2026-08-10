@@ -12,9 +12,9 @@ import contextlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-from train.evaluate import ( inspect_weights, evaluate_portfolio, compute_metrics,
-    evaluate_baseline, weight_statistics, turnover_statistics, equal_weight_distance,
-    cash_statistics, regime_analysis)
+from train.evaluate import (inspect_weights, evaluate_model, compute_metrics,
+                            evaluate_baseline, weight_statistics, turnover_statistics, equal_weight_distance,
+                            cash_statistics, regime_analysis)
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
 from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
@@ -39,7 +39,7 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
         inspect_weights(model, test_env)
 
         best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
-        results = evaluate_portfolio(best_model, test_env)
+        results = evaluate_model(best_model, test_env)
 
         print("Final portfolio value:", results["portfolio_values"][-1])
         total_return = results["portfolio_values"][-1] - 1

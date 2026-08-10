@@ -8,7 +8,7 @@ market regime sensitivity.
 """
 import numpy as np
 
-def evaluate_portfolio(model, env):
+def evaluate_model(model, env):
     """
     Run a deterministic eval and collect portfolio history
     """
