@@ -100,10 +100,8 @@ def run_training(rl_algorithm="PPO"):
 
     # Final training on all data up to 2021
     (
-        train_windows,
-        train_returns,
-        test_windows,
-        test_returns,
+        train_windows, train_returns,
+        test_windows,test_returns,
     ) = load_test_data()
 
     train_env = make_env(train_windows, train_returns)
@@ -115,16 +113,10 @@ def run_training(rl_algorithm="PPO"):
     model = create_model(rl_algorithm, train_env, seed=0)
 
     model.learn(total_timesteps=200_000)
-
     model.save("../models/final_model")
 
-    run_debugging_info(
-        model,
-        test_env,
-        test_returns,
-        seed=0,
-        rl_algorithm=PPO if isinstance(model, PPO) else SAC,
-    )
+    run_debugging_info(model, test_env, test_returns, seed=0,
+        rl_algorithm=PPO if isinstance(model, PPO) else SAC,)
 
 if __name__ == "__main__":
     run_training()
