@@ -16,7 +16,7 @@ import torch
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import EvalCallback
 
-from data.pipeline import load_training_data
+from data.pipeline import load_data
 from train.make_env import make_envs
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
@@ -51,7 +51,7 @@ def run_training(rl_algorithm="PPO"):
             val_returns,
             test_windows,
             test_returns,
-        ) = load_training_data()
+        ) = load_data()
         inspect_observation(train_windows[0])
 
 

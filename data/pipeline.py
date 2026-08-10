@@ -11,7 +11,7 @@ from data.data_engineering.processing import validate_data, split_data, scale_fe
 from features.windowing import create_windows
 
 
-def load_training_data(obs_widow_size = 30, rolling_window = 20):
+def load_data(obs_widow_size = 30, rolling_window = 20):
     """
     Prepare training, validation, and test datasets for training.
 
