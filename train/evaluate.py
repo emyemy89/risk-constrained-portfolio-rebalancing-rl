@@ -91,6 +91,17 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
         "Max Drawdown": max_drawdown,
     }
 
+def evaluate_and_compute_metrics(model, env):
+    """
+    Evaluate a model and return its performance metrics.
+    """
+    results = evaluate_model(model, env)
+    metrics = compute_metrics(
+        results["portfolio_values"],
+        results["daily_returns"],
+    )
+    return metrics
+
 def weight_statistics(weights):
     """
     Print summary statistics for portfolio weights
