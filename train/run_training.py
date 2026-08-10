@@ -11,14 +11,16 @@ This module coordinates the complete training process:
 """
 import random
 import numpy as np
+import pandas as pd
 import torch
 
 from stable_baselines3 import PPO, SAC
 
-from data.pipeline import load_data
+from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
+from train.evaluate import evaluate_and_compute_metrics
 
 seeds = [0, 1, 2, 3, 4]
 folds = [
@@ -43,6 +45,7 @@ def run_training(rl_algorithm="PPO"):
             - "PPO" for Proximal Policy Optimization
             - "SAC" for Soft Actor-Critic
         """
+    validation_results = []
     for fold_idx, (train_end, val_start, val_end) in enumerate(folds):
         # Seeds for reproducibility
         for seed in seeds:
@@ -97,17 +100,94 @@ def run_training(rl_algorithm="PPO"):
                     verbose=0,
                 )
 
-            model.learn(
-                total_timesteps=200_000,
-            )
+            model.learn(total_timesteps=200_000,)
 
             # best_model saved automatically during training based on val performance
             # final_model is the state after the last update
-            model.save(f"../models/final_model_seed_{seed}")
+            #model.save(f"../models/final_model_seed_{seed}")
 
-            run_debugging_info(
-                model, val_env, val_returns, seed, PPO if isinstance(model, PPO) else SAC
-            )
+            metrics = evaluate_and_compute_metrics(model, val_env)
+            validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
+
+    results_df = pd.DataFrame(validation_results)
+
+    print("\n=== Validation Results ===")
+    print(results_df)
+    fold_results = (
+        results_df
+        .groupby("fold")
+        .agg({
+            "Annual Return": "mean",
+            "Annual Volatility": "mean",
+            "Sharpe Ratio": "mean",
+            "Max Drawdown": "mean",
+        })
+    )
+    print("\n=== Fold Results ===")
+    print(fold_results)
+    mean_sharpe = fold_results["Sharpe Ratio"].mean()
+    worst_sharpe = fold_results["Sharpe Ratio"].min()
+    print(f"\nMean Fold Sharpe: {mean_sharpe:.4f}")
+    print(f"Worst Fold Sharpe: {worst_sharpe:.4f}")
+
+    # Final training on all data up to 2021
+    (
+        train_windows,
+        train_returns,
+        test_windows,
+        test_returns,
+    ) = load_test_data()
+
+    train_env = make_env(train_windows, train_returns)
+    test_env = make_env(test_windows, test_returns)
+
+    train_env.reset(seed=0)
+    test_env.reset(seed=0)
+
+    if rl_algorithm == "PPO":
+        model = PPO(
+            policy="MlpPolicy",
+            env=train_env,
+            seed=0,
+            learning_rate=1e-4,
+            n_steps=2048,
+            batch_size=64,
+            n_epochs=10,
+            gamma=0.99,
+            gae_lambda=0.95,
+            clip_range=0.2,
+            target_kl=0.02,
+            ent_coef=0.01,
+            vf_coef=0.5,
+            tensorboard_log="../logs/tensorboard/",
+            verbose=0,
+        )
+    else:
+        model = SAC(
+            policy="MlpPolicy",
+            env=train_env,
+            seed=0,
+            learning_rate=3e-4,
+            buffer_size=100_000,
+            learning_starts=1_000,
+            batch_size=256,
+            tau=0.005,
+            gamma=0.99,
+            ent_coef="auto",
+            tensorboard_log="../logs/tensorboard/",
+            verbose=0,
+        )
+    model.learn(total_timesteps=200_000)
+
+    model.save("../models/final_model")
+
+    run_debugging_info(
+        model,
+        test_env,
+        test_returns,
+        seed=0,
+        rl_algorithm=PPO if isinstance(model, PPO) else SAC,
+    )
 
 if __name__ == "__main__":
     run_training()

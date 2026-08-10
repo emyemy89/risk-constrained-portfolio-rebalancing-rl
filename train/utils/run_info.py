@@ -38,8 +38,8 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
 
         inspect_weights(model, test_env)
 
-        best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
-        results = evaluate_model(best_model, test_env)
+        # best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
+        results = evaluate_model(model, test_env)
 
         print("Final portfolio value:", results["portfolio_values"][-1])
         total_return = results["portfolio_values"][-1] - 1
