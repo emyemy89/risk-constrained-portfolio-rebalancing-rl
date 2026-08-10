@@ -48,10 +48,7 @@ def load_training_data(obs_widow_size = 30, rolling_window = 20):
     test_returns = test_returns.iloc[offset:].to_numpy()
     # %%
     return (
-        train_windows,
-        train_returns,
-        val_windows,
-        val_returns,
-        test_windows,
-        test_returns,
+        train_windows, train_returns,
+        val_windows, val_returns,
+        test_windows, test_returns,
     )
