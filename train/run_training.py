@@ -20,6 +20,7 @@ from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
+from train.utils.algorithm_selection import create_model
 from train.evaluate import evaluate_and_compute_metrics
 
 seeds = [0, 1, 2, 3, 4]
@@ -66,40 +67,7 @@ def run_training(rl_algorithm="PPO"):
             train_env.reset(seed=seed)
             val_env.reset(seed=seed)
 
-            if rl_algorithm == "PPO":
-                model = PPO(
-                    policy="MlpPolicy",
-                    env=train_env,
-                    seed=seed,
-                    learning_rate=1e-4,
-                    n_steps=2048,  # rollout length
-                    batch_size=64,  # mini-batch size
-                    n_epochs=10,  # how many times PPO reuses the collected rollout
-                    gamma=0.99,  # long-term reward discount (how much agent values future rewards)
-                    gae_lambda=0.95,  # advantage smoothing(how are they estimated)
-                    clip_range=0.2,  # what makes PPO "proximal" and stable.
-                    target_kl=0.02,
-                    ent_coef=0.01,  # exploration vs. value learning balance (vf_coef)
-                    vf_coef=0.5,
-                    tensorboard_log="../logs/tensorboard/",  # logs
-                    verbose=0,
-                )
-            else:
-                model = SAC(
-                    policy="MlpPolicy",
-                    env=train_env,
-                    seed=seed,
-                    learning_rate=3e-4,
-                    buffer_size=100_000,
-                    learning_starts=1_000,
-                    batch_size=256,
-                    tau=0.005,
-                    gamma=0.99,
-                    ent_coef="auto",
-                    tensorboard_log="../logs/tensorboard/", # logs
-                    verbose=0,
-                )
-
+            model = create_model(rl_algorithm, train_env, seed,)
             model.learn(total_timesteps=200_000,)
 
             # best_model saved automatically during training based on val performance
@@ -144,39 +112,8 @@ def run_training(rl_algorithm="PPO"):
     train_env.reset(seed=0)
     test_env.reset(seed=0)
 
-    if rl_algorithm == "PPO":
-        model = PPO(
-            policy="MlpPolicy",
-            env=train_env,
-            seed=0,
-            learning_rate=1e-4,
-            n_steps=2048,
-            batch_size=64,
-            n_epochs=10,
-            gamma=0.99,
-            gae_lambda=0.95,
-            clip_range=0.2,
-            target_kl=0.02,
-            ent_coef=0.01,
-            vf_coef=0.5,
-            tensorboard_log="../logs/tensorboard/",
-            verbose=0,
-        )
-    else:
-        model = SAC(
-            policy="MlpPolicy",
-            env=train_env,
-            seed=0,
-            learning_rate=3e-4,
-            buffer_size=100_000,
-            learning_starts=1_000,
-            batch_size=256,
-            tau=0.005,
-            gamma=0.99,
-            ent_coef="auto",
-            tensorboard_log="../logs/tensorboard/",
-            verbose=0,
-        )
+    model = create_model(rl_algorithm, train_env, seed=0)
+
     model.learn(total_timesteps=200_000)
 
     model.save("../models/final_model")
