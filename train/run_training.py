@@ -16,7 +16,7 @@ import torch
 from stable_baselines3 import PPO, SAC
 
 from data.pipeline import load_data
-from train.make_env import make_envs
+from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 
@@ -50,26 +50,16 @@ def run_training(rl_algorithm="PPO"):
             np.random.seed(seed)
             torch.manual_seed(seed)
             # Data Loading
-            (
-                train_windows,
-                train_returns,
-                val_windows,
-                val_returns,
-                test_windows,
-                test_returns,
-            ) = load_data()
+            (train_windows, train_returns, val_windows, val_returns,) = (
+                load_data(train_end=train_end, val_start=val_start, val_end=val_end,))
+
             inspect_observation(train_windows[0])
 
 
             # create the environments
-            train_env, val_env, test_env = make_envs(
-                train_windows,
-                train_returns,
-                val_windows,
-                val_returns,
-                test_windows,
-                test_returns,
-            )
+            train_env = make_env(train_windows, train_returns)
+            val_env = make_env(val_windows, val_returns)
+
             train_env.reset(seed=seed)
             val_env.reset(seed=seed)
 
@@ -116,7 +106,7 @@ def run_training(rl_algorithm="PPO"):
             model.save(f"../models/final_model_seed_{seed}")
 
             run_debugging_info(
-                model, test_env, test_returns, seed, PPO if isinstance(model, PPO) else SAC
+                model, val_env, val_returns, seed, PPO if isinstance(model, PPO) else SAC
             )
 
 if __name__ == "__main__":
