@@ -32,15 +32,24 @@ def validate_data(data):
     return data
 
 
-def split_data(features):
+def split_data(data, train_end, val_start, val_end):
     """
-    Split data into train, validation, and test periods
-    :param features: The set of concatenated features of assets
-    :return: the train, validation, and test sets
+    Split time-series data into chronological training and validation periods.
+    data : pd.DataFrame
+        Time-indexed feature or return data.
+    train_end : str
+        Last date included in training.
+    val_start : str
+        First date included in validation.
+    val_end : str
+        Last date included in validation.
+    Returns
+    train_data : pd.DataFrame
+    val_data : pd.DataFrame
     """
-    return (features.loc[:'2018-12-31'],
-            features.loc['2019-01-01':'2021-12-31'],
-            features.loc['2022-01-01':])
+    train_data = data.loc[:train_end]
+    val_data = data.loc[val_start:val_end]
+    return train_data, val_data
 
 
 def scale_features(train_features, val_features, test_features):
