@@ -14,7 +14,6 @@ import numpy as np
 import torch
 
 from stable_baselines3 import PPO, SAC
-from stable_baselines3.common.callbacks import EvalCallback
 
 from data.pipeline import load_data
 from train.make_env import make_envs
@@ -22,6 +21,12 @@ from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 
 seeds = [0, 1, 2, 3, 4]
+folds = [
+    ("2012-12-31", "2013-01-01", "2014-12-31"),
+    ("2014-12-31", "2015-01-01", "2016-12-31"),
+    ("2016-12-31", "2017-01-01", "2018-12-31"),
+    ("2018-12-31", "2019-01-01", "2020-12-31"),
+]
 
 def run_training(rl_algorithm="PPO"):
     """
@@ -67,17 +72,6 @@ def run_training(rl_algorithm="PPO"):
         train_env.reset(seed=seed)
         val_env.reset(seed=seed)
 
-        # Evaluation callback
-        # pauses training -> runs policy on val env ->
-        # computes avg performance -> saves best model(if improved)
-        eval_callback = EvalCallback(
-            val_env,
-            best_model_save_path=f"../models/best_model_seed_{seed}/",
-            log_path=f"../logs/seed_{seed}/",
-            eval_freq=10_000, #evaluates every 10K environment steps
-            deterministic=True,
-            render=False,
-        )
         if rl_algorithm == "PPO":
             model = PPO(
                 policy="MlpPolicy",
