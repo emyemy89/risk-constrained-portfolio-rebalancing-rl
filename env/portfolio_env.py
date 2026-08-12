@@ -13,10 +13,12 @@ class PortfolioEnv(gym.Env):
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.001,
+            reward_horizon=5,
     ):
         self.windows = windows
         self.returns = returns
         self.n_assets = self.returns.shape[1]
+        self.reward_horizon = reward_horizon
 
         self.initial_cash = initial_cash
         self.risk_lambda = risk_lambda
@@ -66,13 +68,22 @@ class PortfolioEnv(gym.Env):
         weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
         weights /= np.sum(weights) # normalize
         turnover = np.sum(np.abs(weights - self.prev_weights))
+        # One-day return (used for portfolio evolution)
         next_returns = self.returns[self.current_step + 1]
-        portfolio_return = np.dot(weights, next_returns) # e.g. 0.5TLT + 0.5SPY
-        self.portfolio_value *= np.exp(portfolio_return) # update wealth
-        self.portfolio_returns.append(portfolio_return) # store for risk
+        portfolio_return = np.dot(weights, next_returns)
+        self.portfolio_value *= np.exp(portfolio_return)
+        self.portfolio_returns.append(portfolio_return)
+        # Calculate return for a set horizon
+        future_returns = self.returns[
+            self.current_step + 1:
+            self.current_step + 1 + self.reward_horizon
+        ]
 
-        # compute reward
-        reward = portfolio_return
+        # Compute reward
+        reward = np.sum(future_returns @ weights)
+        # Make losses more costly
+        if portfolio_return < 0:
+            reward += 0.5 * portfolio_return
         reward -= self.transaction_cost * turnover
 
         # risk penalty
@@ -80,7 +91,7 @@ class PortfolioEnv(gym.Env):
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
         self.current_step += 1
-        terminated = self.current_step >= len(self.windows) - 2
+        terminated = (self.current_step >=len(self.windows) - self.reward_horizon - 1)
         next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
