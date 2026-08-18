@@ -1,17 +1,33 @@
+"""
+Debugging and analysis utilities for the experiments.
+
+This module runs post-training diagnostics for portfolio RL models. It evaluates
+trained agents, compares performance against baseline strategies, analyzes
+portfolio allocations, computes statistics, and generates plots for experiment
+results.
+"""
 import os
 import io
 import contextlib
+import numpy as np
 import matplotlib.pyplot as plt
 
-from stable_baselines3 import PPO, SAC
-
-from train.evaluate import *
+from train.evaluate import ( inspect_weights, evaluate_portfolio, compute_metrics,
+    evaluate_baseline, weight_statistics, turnover_statistics, equal_weight_distance,
+    cash_statistics, regime_analysis)
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
 from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed, model_class, rl_algorithm):
-    out_dir = f"./results/seed_{rl_algorithm}_{seed}"
+def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
+    """
+    Run post-training evaluation and save experiment diagnostics.
+
+    Evaluates the trained RL model on the test environment, compares it against
+    baseline strategies, prints portfolio statistics, saves debug logs, and
+    generates evaluation plots.
+    """
+    out_dir = f"./results/seed_{seed}"
     os.makedirs(out_dir, exist_ok=True)
     log_path = os.path.join(out_dir, "debug_info.txt")
 

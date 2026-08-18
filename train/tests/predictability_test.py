@@ -1,3 +1,11 @@
+"""
+Random forest baseline for asset selection prediction.
+
+This script trains a supervised learning model to predict which asset will
+have the highest future return over a specified horizon. It uses
+past market feature windows as input and compares its performance
+against a majority-class baseline.
+"""
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -13,17 +21,17 @@ from data.pipeline import load_training_data
         test_returns,
     ) = load_training_data()
 
-horizon = 1 # prediction over 20 days
+HORIZON= 1 # prediction over 20 days
 future_train_returns = np.array([
-    np.sum(train_returns[i:i+horizon, :], axis=0)
-    for i in range(len(train_returns)-horizon)
+    np.sum(train_returns[i:i+HORIZON, :], axis=0)
+    for i in range(len(train_returns)-HORIZON)
 ])
 y_train = np.argmax(future_train_returns, axis=1)
 
 
 future_val_returns = np.array([
-    np.sum(val_returns[i:i+horizon, :], axis=0)
-    for i in range(len(val_returns)-horizon)
+    np.sum(val_returns[i:i+HORIZON, :], axis=0)
+    for i in range(len(val_returns)-HORIZON)
 ])
 y_val = np.argmax(future_val_returns, axis=1)
 

@@ -1,3 +1,9 @@
+"""
+Utilities for creating and wrapping portfolio environments.
+
+This module provides helper functions for initializing PortfolioEnv instances
+and wrapping them with Stable-Baselines3 Monitor objects.
+"""
 from stable_baselines3.common.monitor import Monitor
 from env.portfolio_env import PortfolioEnv
 
@@ -22,8 +28,13 @@ def make_envs(
     test_returns,
     **kwargs,
 ):
+    """
+        Create training, validation, and testing environments.
+
+        Generates separate environments using different datasets while
+        sharing the same environment configuration.
+        """
     train_env = make_env(train_windows, train_returns, **kwargs)
     val_env = make_env(val_windows, val_returns, **kwargs)
     test_env = make_env(test_windows, test_returns, **kwargs)
-
     return train_env, val_env, test_env
