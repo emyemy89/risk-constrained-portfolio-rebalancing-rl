@@ -72,8 +72,8 @@ def run_training(rl_algorithm="PPO"):
         # computes avg performance -> saves best model(if improved)
         eval_callback = EvalCallback(
             val_env,
-            best_model_save_path=f"../models/best_model_seed_{seed}/",
-            log_path=f"../logs/seed_{seed}/",
+            best_model_save_path=f"../models/best_model_seed_{rl_algorithm}_{seed}/",
+            log_path=f"../logs/seed_{rl_algorithm}_{seed}/",
             eval_freq=10_000, #evaluates every 10K environment steps
             deterministic=True,
             render=False,
@@ -119,11 +119,13 @@ def run_training(rl_algorithm="PPO"):
 
         # best_model saved automatically during training based on val performance
         # final_model is the state after the last update
-        model.save(f"../models/final_model_seed_{seed}")
+        model.save(f"../models/final_model_seed_{rl_algorithm}_{seed}")
+
 
         run_debugging_info(
             model, test_env, test_returns, seed, PPO if isinstance(model, PPO) else SAC
         )
+
 
 if __name__ == "__main__":
     run_training()

@@ -38,7 +38,7 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
 
         inspect_weights(model, test_env)
 
-        best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
+        best_model = model_class.load(f"../models/best_model_seed_{rl_algorithm}_{seed}/best_model", env=test_env)
         results = evaluate_portfolio(best_model, test_env)
 
         print("Final portfolio value:", results["portfolio_values"][-1])
@@ -51,14 +51,14 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
         equal = evaluate_baseline(test_returns, np.ones(6) / 6)
         print("--- Baseline comparison ---")
-        print("PPO:", metrics)
+        print(f"{rl_algorithm}:", metrics)
         print("SPY:", spy)
         print("Equal:", equal, "\n")
 
         print("--- Weight statistics ---")
         weight_statistics(results["weights"])
 
-        print("\n--- PPO metrics ---")
+        print(f"\n--- {rl_algorithm} metrics ---")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
         print()
@@ -89,13 +89,13 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
     print(f"\nSaved debug info to {log_path}")
 
     # plots
-    ppo_values = results["portfolio_values"]
+    rl_algorithm_values = results["portfolio_values"]
     spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
     equal_returns = test_returns @ (np.ones(6) / 6)
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
 
-    plot_portfolios({"PPO": ppo_values, "SPY": spy_values, "Equal Weight": equal_values})
+    plot_portfolios({f"{rl_algorithm}": rl_algorithm_values, "SPY": spy_values, "Equal Weight": equal_values})
     plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
 
     plot_weights(results["weights"])
