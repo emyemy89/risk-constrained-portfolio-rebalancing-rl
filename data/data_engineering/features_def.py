@@ -41,6 +41,8 @@ def create_features(data, rolling_window):
     spy_ma200 = compute_trend_regime(200, aligned_prices)
     spy_drawdown = compute_drawdown(252, aligned_prices)
 
+    market_volatility = compute_market_volatility(volatility_20)
+    market_correlation = compute_market_correlations(correlations)
 
     # Combine the features
     features = pd.concat(
@@ -48,13 +50,13 @@ def create_features(data, rolling_window):
             log_returns,
             volatility_20, volatility_60, volatility_252,
             momentum_20, momentum_60, momentum_252,
-            correlations,
-            spy_ma50,
-            spy_ma200,
+            correlations, spy_ma50, spy_ma200,
             spy_drawdown,
+            market_volatility, market_correlation,
         ],axis=1, keys=["ret", "vol20", "vol60", "vol252",
                         "mom20", "mom60", "mom252",
-                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown"],
+                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown",
+                        "market_volatility", "market_correlation"],
     ).dropna()
     return features, log_returns.loc[features.index]
 
@@ -107,7 +109,6 @@ def compute_correlation(log_returns, time_interval):
 def compute_trend_regime(window_size, aligned_prices):
     """
     Compute trend regime using X-day moving average
-    :return:
     """
     spy = aligned_prices["SPY"]
     spy_ma = spy.rolling(window_size).mean() # moving average
@@ -117,11 +118,22 @@ def compute_trend_regime(window_size, aligned_prices):
 def compute_drawdown(window_size, aligned_prices):
     """
     Compute drawdown using X-day moving average
-    :param window_size:
-    :param aligned_prices:
-    :return:
     """
     spy = aligned_prices["SPY"]
     rolling_max = spy.rolling(window_size).max()
     spy_drawdown = spy / rolling_max - 1
     return spy_drawdown
+
+def compute_market_volatility(volatility):
+    """
+    Compute market volatility of non-CASH assets
+    """
+    return volatility.drop(columns=["CASH"]).mean(axis=1).rename("market_volatility")
+
+def compute_market_correlations(correlations):
+    """
+    Compute average correlation with SPY across non-CASH assets.
+    """
+    return correlations[
+        [column for column in correlations.columns if column != "CASH_corr_SPY"]
+    ].mean(axis=1).rename("market_correlation")
