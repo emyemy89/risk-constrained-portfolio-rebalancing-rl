@@ -13,13 +13,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from train.evaluate import (inspect_weights, evaluate_model, compute_metrics,
-                            evaluate_baseline, weight_statistics, turnover_statistics, equal_weight_distance,
-                            cash_statistics, regime_analysis)
+                            evaluate_baseline, weight_statistics, turnover_statistics,
+                            equal_weight_distance, cash_statistics, regime_analysis)
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
 from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
+def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm, fold_idx):
     """
     Run post-training evaluation and save experiment diagnostics.
 
@@ -27,7 +27,7 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
     baseline strategies, prints portfolio statistics, saves debug logs, and
     generates evaluation plots.
     """
-    out_dir = f"./results/seed_{seed}"
+    out_dir = f"./results/fold_{fold_idx}/seed_{seed}"
     os.makedirs(out_dir, exist_ok=True)
     log_path = os.path.join(out_dir, "debug_info.txt")
 
@@ -38,7 +38,6 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
 
         inspect_weights(model, test_env)
 
-        # best_model = rl_algorithm.load(f"../models/best_model_seed_{seed}/best_model", env=test_env)
         results = evaluate_model(model, test_env)
 
         print("Final portfolio value:", results["portfolio_values"][-1])
@@ -97,9 +96,12 @@ def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm):
 
     plot_portfolios({"PPO": ppo_values, "SPY": spy_values, "Equal Weight": equal_values})
     plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
+    plt.close()
 
     plot_weights(results["weights"])
     plt.savefig(os.path.join(out_dir, "weights.png"))
+    plt.close()
 
     plot_cash_weight(results["weights"])
     plt.savefig(os.path.join(out_dir, "cash_weight.png"))
+    plt.close()

@@ -76,7 +76,8 @@ def run_training(rl_algorithm="PPO"):
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
-
+            run_debugging_info(model, val_env, val_returns, seed=seed,
+                rl_algorithm=PPO if isinstance(model, PPO) else SAC,fold_idx=fold_idx + 1,)
     results_df = pd.DataFrame(validation_results)
 
     print("\n=== Validation Results ===")
@@ -116,7 +117,7 @@ def run_training(rl_algorithm="PPO"):
     model.save("../models/final_model")
 
     run_debugging_info(model, test_env, test_returns, seed=0,
-        rl_algorithm=PPO if isinstance(model, PPO) else SAC,)
+        rl_algorithm=PPO if isinstance(model, PPO) else SAC, fold_idx="final")
 
 if __name__ == "__main__":
     run_training()

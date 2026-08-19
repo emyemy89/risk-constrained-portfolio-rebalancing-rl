@@ -150,7 +150,7 @@ class PortfolioEnv(gym.Env):
         # One-day return (used for portfolio evolution)
         next_returns = self.returns[self.current_step + 1]
         portfolio_return = np.dot(weights, next_returns)
-        
+
         # Deduct transaction costs from wealth
         cost = self.transaction_cost * turnover
         self.portfolio_value *= np.exp(portfolio_return) * (1.0 - cost)
@@ -166,6 +166,7 @@ class PortfolioEnv(gym.Env):
         # Compute Reward
         reward = np.sum(future_returns @ weights)
         reward -= cost
+
         # Make losses more costly
         if portfolio_return < 0:
             reward += 0.5 * portfolio_return
