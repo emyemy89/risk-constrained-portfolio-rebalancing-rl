@@ -14,9 +14,6 @@ import numpy as np
 import pandas as pd
 import torch
 
-from stable_baselines3 import PPO, SAC
-from sb3_contrib import RecurrentPPO
-
 from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
@@ -29,8 +26,7 @@ folds = [
     ("2012-12-31", "2013-01-01", "2014-12-31"),
     ("2014-12-31", "2015-01-01", "2016-12-31"),
     ("2016-12-31", "2017-01-01", "2018-12-31"),
-    ("2018-12-31", "2019-01-01", "2020-12-31"),
-]
+    ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
 def run_training(rl_algorithm="PPO"):
     """
