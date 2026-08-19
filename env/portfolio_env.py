@@ -94,6 +94,7 @@ class PortfolioEnv(gym.Env):
                 self.windows.shape[1] *
                 self.windows.shape[2]
                 + self.n_assets
+                + 3 # portfolio return, volatility, drawdown
         )
         self.observation_space = spaces.Box(
             low=-np.inf,
@@ -114,7 +115,21 @@ class PortfolioEnv(gym.Env):
     def _get_obs(self):
         market_obs = self.windows[self.current_step].astype(np.float32)
         portfolio_state = self.prev_weights.astype(np.float32)
-        return np.concatenate([market_obs.flatten(),portfolio_state])
+        if self.portfolio_returns:
+            recent_returns = self.portfolio_returns[-self.volatility_window:]
+
+            portfolio_return = np.sum(recent_returns)
+            portfolio_volatility = np.std(recent_returns)
+
+            peak_value = max(self.initial_value, self.portfolio_value)
+            portfolio_drawdown = self.portfolio_value / peak_value - 1.0
+        else:
+            portfolio_return, portfolio_volatility, portfolio_drawdown = 0.0, 0.0, 0.0
+
+        portfolio_metrics = np.array(
+            [portfolio_return, portfolio_volatility, portfolio_drawdown,],
+            dtype=np.float32,)
+        return np.concatenate([market_obs.flatten(),portfolio_state, portfolio_metrics])
 
     def _project_to_bounded_simplex(self, values, lower, upper):
         """Project values onto the simplex subject to lower and upper bounds."""
