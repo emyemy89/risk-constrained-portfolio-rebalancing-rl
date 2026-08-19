@@ -19,7 +19,7 @@ from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_we
 from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed, rl_algorithm, fold_idx):
+def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
     """
     Run post-training evaluation and save experiment diagnostics.
 
