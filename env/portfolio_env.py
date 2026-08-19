@@ -144,12 +144,13 @@ class PortfolioEnv(gym.Env):
         upper = np.minimum(1.0, self.prev_weights + self.max_weight_change,)
         weights = self._project_to_bounded_simplex(desired_weights, lower, upper,)
 
-        # Use Turnover=1/2 ∑ ∣ w_{i,t} −w{i,t-1} ∣
+        # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
 
         # One-day return (used for portfolio evolution)
         next_returns = self.returns[self.current_step + 1]
         portfolio_return = np.dot(weights, next_returns)
+        
         # Deduct transaction costs from wealth
         cost = self.transaction_cost * turnover
         self.portfolio_value *= np.exp(portfolio_return) * (1.0 - cost)
