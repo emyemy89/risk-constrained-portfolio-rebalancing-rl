@@ -44,8 +44,6 @@ def inspect_observation(window):
         Returns: noisy, oscillating around 0
         volatility: smoother, slowly changing.
         Momentum: smoother than returns, showing trends.
-    :param window:
-    :return: None
     """
     print("Shape:", window.shape)
     plt.figure(figsize=(12, 6))
