@@ -51,10 +51,10 @@ def run_training(rl_algorithm="RecurrentPPO"):
             np.random.seed(seed)
             torch.manual_seed(seed)
             # Data Loading
-            (train_windows, train_returns, val_windows, val_returns,) = (
+            (train_windows, train_returns, val_windows, val_returns, feature_columns) = (
                 load_data(train_end=train_end, val_start=val_start, val_end=val_end,))
 
-            inspect_observation(train_windows[0])
+            inspect_observation(train_windows[0], feature_columns)
 
 
             # create the environments

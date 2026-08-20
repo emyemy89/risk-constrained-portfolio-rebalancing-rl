@@ -5,6 +5,7 @@ This module provides plotting functions for different goals, including comparing
 portfolio performance, visualizing asset allocations, inspecting observation windows,
 and analyzing cash allocation behavior over time.
 """
+import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_portfolios(strategy_values):
@@ -38,25 +39,57 @@ def plot_weights(weights):
     plt.show()
 
 
-def inspect_observation(window):
+def inspect_observation(window, feature_columns):
     """
-    Sanity check to ensure observation looks fine. Should be:
-        Returns: noisy, oscillating around 0
-        volatility: smoother, slowly changing.
-        Momentum: smoother than returns, showing trends.
+    Visualize an observation window in a compact grid, grouped by
+    feature family.
+    Parameters
+    ----------
+    window : np.ndarray
+        Observation window of shape (window_size, n_features).
+
+    feature_columns : pd.Index or pd.MultiIndex
+        Columns corresponding to the features in `window`.
     """
-    print("Shape:", window.shape)
-    plt.figure(figsize=(12, 6))
-    plt.plot(window)
-    plt.title("Observation Window")
-    plt.xlabel("Past Trading Days")
-    plt.ylabel("Standardized Feature Value")
-    plt.legend([
-        "SPY_ret", "QQQ_ret", "TLT_ret", "GLD_ret", "VNQ_ret",
-        "SPY_vol", "QQQ_vol", "TLT_vol", "GLD_vol", "VNQ_vol",
-        "SPY_mom", "QQQ_mom", "TLT_mom", "GLD_mom", "VNQ_mom",
-    ])
-    plt.grid(True)
+    print("Observation shape:", window.shape)
+    # Create readable feature labels
+    labels = [
+        " | ".join(map(str, col)) if isinstance(col, tuple) else str(col)
+        for col in feature_columns
+    ]
+    # Group feature indices by top-level feature family
+    groups = {}
+    for i, col in enumerate(feature_columns):
+        if isinstance(col, tuple):
+            group = str(col[0])
+        else:
+            group = "features"
+        groups.setdefault(group, []).append(i)
+    # Create compact subplot grid
+    n_groups = len(groups)
+    n_cols = 3
+    n_rows = int(np.ceil(n_groups / n_cols))
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(18, 4 * n_rows), squeeze=False
+    )
+    axes = axes.flatten()
+
+    # Plot each feature family
+    for ax, (group, indices) in zip(axes, groups.items()):
+        for i in indices:
+            ax.plot(window[:, i], label=labels[i], linewidth=1)
+        ax.set_title(group)
+        ax.set_xlabel("Past Trading Days")
+        ax.set_ylabel("Standardized Value")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=7, loc="best")
+    # Hide unused subplots
+    for ax in axes[n_groups:]:
+        ax.set_visible(False)
+    fig.suptitle("Observation Window — Feature Overview", fontsize=16)
+    plt.tight_layout()
     plt.show()
 
 def plot_cash_weight(weights):
