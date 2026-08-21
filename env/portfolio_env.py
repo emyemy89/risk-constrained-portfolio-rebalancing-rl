@@ -164,7 +164,9 @@ class PortfolioEnv(gym.Env):
         ]
 
         # Compute Reward
-        reward = np.sum(future_returns @ weights)
+        portfolio_returns = future_returns @ weights
+        # Compound log returns
+        reward = np.exp(np.sum(portfolio_returns)) - 1.0
         reward -= cost
 
         # Make losses more costly
