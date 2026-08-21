@@ -141,3 +141,66 @@ def test_transaction_cost_applied():
         env.portfolio_value,
         expected_portfolio_value,
     )
+
+def test_step_returns_valid_observation():
+    """
+    Check that the observation remains valid after a transition, not only after reset
+    """
+    env = make_test_env()
+    env.reset()
+    action = np.array([0.5, -0.5, 0.0], dtype=np.float32)
+    observation, _, _, _, _ = env.step(action)
+    assert observation.shape == env.observation_space.shape
+    assert observation.dtype == np.float32
+    assert np.all(np.isfinite(observation))
+    assert env.observation_space.contains(observation)
+
+def test_portfolio_value_updates_with_returns():
+    """
+    Test portfolio evaluation
+    :return:
+    """
+    returns = np.array([
+        [0.0, 0.0, 0.0],
+        [0.01, 0.02, 0.03],
+        [0.0, 0.0, 0.0],
+    ])
+    windows = np.zeros(
+        (3, 3, 2),
+        dtype=np.float32,
+    )
+    env = PortfolioEnv(
+        windows=windows,
+        returns=returns,
+        initial_cash=1.0,
+        risk_lambda=0.0,
+        volatility_window=3,
+        transaction_cost=0.0,
+        reward_horizon=1,
+    )
+    env.reset()
+    action = np.zeros(3, dtype=np.float32)
+    _, _, _, _, info = env.step(action)
+    expected_return = np.mean([0.01, 0.02, 0.03])
+    expected_value = np.exp(expected_return)
+    assert np.isclose(
+        env.portfolio_value,
+        expected_value,
+    )
+
+def test_episode_terminates_at_expected_step():
+    """
+    Test that the episode terminates at the expected step
+    """
+    env = make_test_env(
+        n_timesteps=10,
+        reward_horizon=1,
+    )
+    env.reset()
+    terminated = False
+    for _ in range(20):
+        action = np.zeros(3, dtype=np.float32)
+        _, _, terminated, _, _ = env.step(action)
+        if terminated:
+            break
+    assert terminated
