@@ -16,7 +16,7 @@ from train.evaluate import (inspect_weights, evaluate_model, compute_metrics,
                             evaluate_baseline, weight_statistics, turnover_statistics,
                             equal_weight_distance, cash_statistics, regime_analysis)
 from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_weight
-from train.tests.momentum_baseline import run_momentum_strategy, calculate_metrics
+from train.experiments.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
 def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
