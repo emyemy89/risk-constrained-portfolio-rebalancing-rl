@@ -18,12 +18,10 @@ def make_test_env(
     Create a small deterministic environment for unit testing.
     """
     windows = np.zeros((n_timesteps, window_size, n_features), dtype=np.float32,)
-
     returns = np.zeros(
         (n_timesteps, n_assets),
         dtype=np.float64,
     )
-
     return PortfolioEnv(
         windows=windows,
         returns=returns,
@@ -37,8 +35,7 @@ def make_test_env(
 
 def test_reset_returns_valid_observation():
     """
-
-    :return:
+    Test that after resset we get a valid observation
     """
     env = make_test_env()
     observation, info = env.reset()
@@ -49,6 +46,9 @@ def test_reset_returns_valid_observation():
 
 
 def test_reset_initializes_valid_weights():
+    """
+    Test that after resset we get a valid weights
+    """
     env = make_test_env(n_assets=3)
     env.reset()
     weights = env.prev_weights
@@ -59,6 +59,9 @@ def test_reset_initializes_valid_weights():
 
 
 def test_weights_sum_to_one():
+    """
+    Test that sum adds up to 1
+    """
     env = make_test_env(n_assets=3)
     env.reset()
     action = np.array([1.0, -1.0, 0.5], dtype=np.float32)
@@ -68,6 +71,9 @@ def test_weights_sum_to_one():
 
 
 def test_weights_are_bounded():
+    """
+    Test that weights are bounded between 0 and 1
+    """
     env = make_test_env(n_assets=3)
     env.reset()
     actions = [
@@ -83,6 +89,9 @@ def test_weights_are_bounded():
 
 
 def test_max_weight_change_is_respected():
+    """
+    Test that max_weight_change changes
+    """
     env = make_test_env(n_assets=3)
     env.reset()
     previous_weights = env.prev_weights.copy()
@@ -93,51 +102,41 @@ def test_max_weight_change_is_respected():
     assert np.all(weight_changes <= env.max_weight_change + 1e-8)
 
 def test_no_nan_weights():
+    """
+    Test that no nan weights
+    """
     env = make_test_env(n_assets=3)
-
     env.reset()
-
     actions = [
         np.array([1.0, 1.0, 1.0], dtype=np.float32),
         np.array([-1.0, -1.0, -1.0], dtype=np.float32),
         np.array([1.0, -1.0, 0.0], dtype=np.float32),
         np.array([0.5, -0.7, 1.0], dtype=np.float32),
     ]
-
     for action in actions:
         _, _, _, _, info = env.step(action)
-
         weights = info["weights"]
-
         assert np.all(np.isfinite(weights))
 
-
 def test_transaction_cost_applied():
+    """
+    Test that transaction_cost applies
+    """
     transaction_cost = 0.001
-
     env = make_test_env(
         n_assets=3,
         transaction_cost=transaction_cost,
     )
-
     env.reset()
-
     previous_weights = env.prev_weights.copy()
-
     action = np.array([1.0, -1.0, 0.0], dtype=np.float32)
-
     _, _, _, _, info = env.step(action)
-
     weights = info["weights"]
-
     turnover = 0.5 * np.sum(
         np.abs(weights - previous_weights)
     )
-
     expected_cost = transaction_cost * turnover
-
     expected_portfolio_value = 1.0 * (1.0 - expected_cost)
-
     assert np.isclose(
         env.portfolio_value,
         expected_portfolio_value,
