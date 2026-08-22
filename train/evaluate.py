@@ -18,19 +18,14 @@ def evaluate_model(model, env):
     rewards = []
     daily_returns = []
     done = False
-    lstm_states = None
-    episode_starts = np.ones((1,), dtype=bool)
     while not done:
-        action, lstm_states = model.predict(
-            obs, state=lstm_states,
-            episode_start=episode_starts, deterministic=True,)
+        action, _ = model.predict(obs, deterministic=True,)
         obs, reward, terminated, truncated, info = env.step(action)
         portfolio_values.append(info["portfolio_value"])
         weights_history.append(info["weights"])
         rewards.append(reward)
         daily_returns.append(info["step_return"])
         done = terminated or truncated
-        episode_starts = np.array([done], dtype=bool)
     return {
         "portfolio_values": np.array(portfolio_values),
         "weights": np.array(weights_history),
@@ -56,12 +51,8 @@ def inspect_weights(model, env, n_steps=10):
     Print portfolio allocation selected by model
     """
     obs, _ = env.reset()
-    lstm_states = None
-    episode_starts = np.ones((1,), dtype=bool)
     for _ in range(n_steps):
-        action, lstm_states = model.predict(
-            obs, state=lstm_states,
-            episode_start=episode_starts, deterministic=True,)
+        action, _ = model.predict(obs, deterministic=True,)
         obs, reward, terminated, truncated, info = env.step(action)
         print(
             "weights:",
@@ -69,9 +60,7 @@ def inspect_weights(model, env, n_steps=10):
             "reward:",
             round(reward, 4)
         )
-        done = terminated or truncated
-        episode_starts = np.array([done], dtype=bool)
-        if done:
+        if terminated or truncated:
             break
 
 def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):

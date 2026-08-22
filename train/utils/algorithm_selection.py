@@ -8,9 +8,9 @@ def create_model(rl_algorithm, train_env, seed=None):
     """
     Choose between PPO and SAC
     """
-    if rl_algorithm == "RecurrentPPO":
-        return RecurrentPPO(
-            policy="MlpLstmPolicy",
+    if rl_algorithm == "PPO":
+        return PPO(
+            policy="MlpPolicy",
             env=train_env,
             seed=seed,
             learning_rate=1e-4,

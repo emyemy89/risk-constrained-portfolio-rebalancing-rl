@@ -28,7 +28,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="RecurrentPPO"):
+def run_training(rl_algorithm="PPO"):
     """
         Train RL agents for portfolio allocation.
 
