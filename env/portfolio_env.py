@@ -116,12 +116,34 @@ class PortfolioEnv(gym.Env):
         portfolio_state = self.prev_weights.astype(np.float32)
         return np.concatenate([market_obs.flatten(),portfolio_state])
 
+    def _project_to_bounded_simplex(self, values, lower, upper):
+        """Project values onto the simplex subject to lower and upper bounds."""
+        values = np.asarray(values, dtype=np.float64)
+        # The solution has the form clip(values - theta, lower, upper).
+        # Find theta such that the projected weights sum to 1.
+        theta_low = np.min(values - upper)
+        theta_high = np.max(values - lower)
+        for _ in range(60):
+            theta = (theta_low + theta_high) / 2.0
+            weights = np.clip(values - theta, lower, upper)
+            if np.sum(weights) > 1.0:
+                theta_low = theta
+            else:
+                theta_high = theta
+        return np.clip( values - (theta_low + theta_high) / 2.0, lower, upper,)
+
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        delta_weights = action * self.max_weight_change # action represents allocation changes
-        weights = self.prev_weights + delta_weights
-        weights = np.clip(weights, 0, 1)  # enforce valid portfolio weights
-        weights /= np.sum(weights) # normalize
+        action = np.clip(action, -1.0, 1.0)
+        desired_weights = self.prev_weights + action * self.max_weight_change
+
+        # Normalization, enforce:
+        #   (1) weights >= 0      (2) weights <= 1
+        #   (3) sum(weights) = 1  (4) |weights - prev_weights| <= max_weight_change
+        lower = np.maximum(0.0, self.prev_weights - self.max_weight_change,)
+        upper = np.minimum(1.0, self.prev_weights + self.max_weight_change,)
+        weights = self._project_to_bounded_simplex(desired_weights, lower, upper,)
+
         # Use Turnover=1/2 ∑ ∣ w_{i,t} −w{i,t-1} ∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
 
@@ -140,23 +162,25 @@ class PortfolioEnv(gym.Env):
             self.current_step + 1 + self.reward_horizon
         ]
 
-        # Compute reward
+        # Compute Reward
         reward = np.sum(future_returns @ weights)
         reward -= cost
         # Make losses more costly
         if portfolio_return < 0:
             reward += 0.5 * portfolio_return
 
-        # risk penalty
+        # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]
             reward -= self.risk_lambda * np.std(recent_returns)
+
         # Move to next step
         self.current_step += 1
         terminated = self.current_step >=len(self.windows) - self.reward_horizon - 1
         next_obs = self._get_obs()
         self.prev_weights = weights
         episode_return = self.portfolio_value / self.initial_value - 1
+
         info = {
             "portfolio_value": self.portfolio_value,
             "weights": weights,
@@ -164,10 +188,4 @@ class PortfolioEnv(gym.Env):
             "episode_return": episode_return,
             "step_return": portfolio_return,
         }
-        return (
-            next_obs,
-            reward,
-            terminated,
-            False,  # truncated
-            info
-        )
+        return next_obs, reward, terminated, False, info
