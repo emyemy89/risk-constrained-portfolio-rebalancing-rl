@@ -1,4 +1,4 @@
-# Training
+# Training 🏋
 
 This directory contains the code used to train, evaluate, and experiment with the Reinforcement Learning(RL) agent.
 
