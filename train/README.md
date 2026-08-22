@@ -42,6 +42,50 @@ The training setup uses multiple random seeds so that results are not judged fro
 
 `models/` at the project root stores the resulting trained model, while this directory is mainly concerned with **how the model is trained and how its behaviour is evaluated**.
 
+
+### Walk-forward validation
+
+The training setup uses chronological folds to reduce the risk of overfitting to one particular historical period.
+
+Instead of simply doing:
+
+```text
+Train → Validation → Test
+```
+
+the project uses several expanding-window validation folds.
+
+Conceptually:
+
+```text
+Fold 1:
+[──────── Training ────────][Validation]
+
+Fold 2:
+[──────────── Training ────────────][Validation]
+
+Fold 3:
+[──────────────── Training ─────────────────][Validation]
+
+Fold 4:
+[──────────────────── Training ────────────────────][Validation]
+
+Final:
+[──────────────────────────── Training ────────────────────────────]
+                                      │
+                                      ▼
+                                  Final model
+```
+
+Each fold gives the model access to progressively more historical information while keeping the validation period strictly in the future.
+
+This is much closer to how a real investment strategy would be developed: train using information available at the time, evaluate on a later period, then move forward.
+
+The exact date ranges for each fold should be kept in the training configuration/code rather than duplicated here, so this README does not become outdated when the experimental design changes.
+
+---
+
+
 ### Running training
 
 Run the main training script from the project root:
@@ -63,3 +107,5 @@ The large number of files under `logs/` and `results/` is expected: they represe
 
 use ´tensorboard --logdir logs/tensorboard` for logs
 use `rm -rf logs models` to delete old artifacts
+
+
