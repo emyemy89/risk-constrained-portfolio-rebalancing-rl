@@ -27,13 +27,9 @@ def create_features(data, rolling_window):
     log_returns = compute_log_returns(aligned_prices)
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
 
-    volatility_20 = compute_volatility(log_returns, 20)
-    volatility_60 = compute_volatility(log_returns, 60)
-    volatility_252 = compute_volatility(log_returns, 252)
+    volatility_20 = compute_volatility(log_returns, rolling_window)
 
-    momentum_20 = compute_momentum(log_returns, 20)
-    momentum_60 = compute_momentum(log_returns, 60)
-    momentum_252 = compute_momentum(log_returns, 252)
+    momentum_20 = compute_momentum(log_returns, rolling_window)
 
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
@@ -41,22 +37,17 @@ def create_features(data, rolling_window):
     spy_ma200 = compute_trend_regime(200, aligned_prices)
     spy_drawdown = compute_drawdown(252, aligned_prices)
 
-    market_volatility = compute_market_volatility(volatility_20)
-    market_correlation = compute_market_correlations(correlations)
 
     # Combine the features
     features = pd.concat(
         [
             log_returns,
-            volatility_20, volatility_60, volatility_252,
-            momentum_20, momentum_60, momentum_252,
+            volatility_20,
+            momentum_20,
             correlations, spy_ma50, spy_ma200,
             spy_drawdown,
-            market_volatility, market_correlation,
-        ],axis=1, keys=["ret", "vol20", "vol60", "vol252",
-                        "mom20", "mom60", "mom252",
-                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown",
-                        "market_volatility", "market_correlation"],
+        ],axis=1, keys=["ret", "vol20", "mom20",
+                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown",]
     ).dropna()
     return features, log_returns.loc[features.index]
 
