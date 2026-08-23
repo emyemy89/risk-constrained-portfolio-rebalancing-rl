@@ -177,8 +177,8 @@ class PortfolioEnv(gym.Env):
         # Move to next step
         self.current_step += 1
         terminated = self.current_step >=len(self.windows) - self.reward_horizon - 1
-        next_obs = self._get_obs()
         self.prev_weights = weights
+        next_obs = self._get_obs()
         episode_return = self.portfolio_value / self.initial_value - 1
 
         info = {
