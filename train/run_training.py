@@ -118,5 +118,6 @@ def run_training(rl_algorithm="PPO"):
     run_debugging_info(model, test_env, test_returns, seed=0,
         rl_algorithm=PPO if isinstance(model, PPO) else SAC,)
 
+
 if __name__ == "__main__":
     run_training()
