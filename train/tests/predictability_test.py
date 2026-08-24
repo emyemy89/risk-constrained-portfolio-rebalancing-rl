@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-from data.pipeline import load_training_data
+from data.pipeline import load_data
 
 (
         train_windows,
@@ -19,7 +19,7 @@ from data.pipeline import load_training_data
         val_returns,
         test_windows,
         test_returns,
-    ) = load_training_data()
+    ) = load_data()
 
 HORIZON= 1 # prediction over 20 days
 future_train_returns = np.array([

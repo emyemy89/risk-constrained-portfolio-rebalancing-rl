@@ -8,47 +8,7 @@ market regime sensitivity.
 """
 import numpy as np
 
-def evaluate_model(model, env, num_episodes=5):
-    """
-    Eval an RL model over multiple episodes
-    Runs deterministic eval, compute mean cumulative reward
-    :return: mean episode return
-    """
-    episode_returns = []
-    for _ in range(num_episodes):
-        obs, _ = env.reset()
-        done = False
-        total_return = 0
-        while not done:
-            action = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = env.step(action)
-            total_return += reward
-            done = truncated or terminated
-        episode_returns.append(total_return)
-    return float(np.mean(episode_returns))
-
-def inspect_weights(model, env, n_steps=10):
-    """
-    Print portfolio allocation selected by model
-    :param model:
-    :param env:
-    :param n_steps:
-    :return:
-    """
-    obs, _ = env.reset()
-    for _ in range(n_steps):
-        action, _ = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = env.step(action)
-        print(
-            "weights:",
-            np.round(info["weights"], 3),
-            "reward:",
-            round(reward, 4)
-        )
-        if terminated or truncated:
-            break
-
-def evaluate_portfolio(model, env):
+def evaluate_model(model, env):
     """
     Run a deterministic eval and collect portfolio history
     """
@@ -86,6 +46,27 @@ def evaluate_baseline(returns, weights):
     )
     return metrics
 
+def inspect_weights(model, env, n_steps=10):
+    """
+    Print portfolio allocation selected by model
+    :param model:
+    :param env:
+    :param n_steps:
+    :return:
+    """
+    obs, _ = env.reset()
+    for _ in range(n_steps):
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(
+            "weights:",
+            np.round(info["weights"], 3),
+            "reward:",
+            round(reward, 4)
+        )
+        if terminated or truncated:
+            break
+
 def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
     """
     Calculate standard portfolio performance metrics.
@@ -109,6 +90,17 @@ def compute_metrics(portfolio_values, daily_returns, risk_free_rate=0.0):
         "Sharpe Ratio": sharpe,
         "Max Drawdown": max_drawdown,
     }
+
+def evaluate_and_compute_metrics(model, env):
+    """
+    Evaluate a model and return its performance metrics.
+    """
+    results = evaluate_model(model, env)
+    metrics = compute_metrics(
+        results["portfolio_values"],
+        results["daily_returns"],
+    )
+    return metrics
 
 def weight_statistics(weights):
     """
