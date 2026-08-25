@@ -7,7 +7,8 @@ and returns for training.
 """
 from data.extract.load_data import load_etf_data
 from data.data_engineering.features_def import create_features
-from data.data_engineering.processing import validate_data, split_data, split_test_data, scale_features
+from data.data_engineering.processing import (
+             validate_data, split_data, split_test_data, scale_features)
 from features.windowing import create_windows
 
 
@@ -53,6 +54,7 @@ def load_data(train_end, val_start, val_end,
     return (
         train_windows, train_returns,
         val_windows, val_returns,
+        train_features.columns,
     )
 
 def load_test_data(train_end="2021-12-31", test_start="2022-01-01",

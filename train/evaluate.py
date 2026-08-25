@@ -19,7 +19,7 @@ def evaluate_model(model, env):
     daily_returns = []
     done = False
     while not done:
-        action, _ = model.predict(obs, deterministic=True)
+        action, _ = model.predict(obs, deterministic=True,)
         obs, reward, terminated, truncated, info = env.step(action)
         portfolio_values.append(info["portfolio_value"])
         weights_history.append(info["weights"])
@@ -49,14 +49,10 @@ def evaluate_baseline(returns, weights):
 def inspect_weights(model, env, n_steps=10):
     """
     Print portfolio allocation selected by model
-    :param model:
-    :param env:
-    :param n_steps:
-    :return:
     """
     obs, _ = env.reset()
     for _ in range(n_steps):
-        action, _ = model.predict(obs, deterministic=True)
+        action, _ = model.predict(obs, deterministic=True,)
         obs, reward, terminated, truncated, info = env.step(action)
         print(
             "weights:",

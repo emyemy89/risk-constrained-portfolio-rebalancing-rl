@@ -14,8 +14,6 @@ import numpy as np
 import pandas as pd
 import torch
 
-from stable_baselines3 import PPO, SAC
-
 from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
@@ -28,8 +26,7 @@ folds = [
     ("2012-12-31", "2013-01-01", "2014-12-31"),
     ("2014-12-31", "2015-01-01", "2016-12-31"),
     ("2016-12-31", "2017-01-01", "2018-12-31"),
-    ("2018-12-31", "2019-01-01", "2020-12-31"),
-]
+    ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
 def run_training(rl_algorithm="PPO"):
     """
@@ -54,10 +51,10 @@ def run_training(rl_algorithm="PPO"):
             np.random.seed(seed)
             torch.manual_seed(seed)
             # Data Loading
-            (train_windows, train_returns, val_windows, val_returns,) = (
+            (train_windows, train_returns, val_windows, val_returns, feature_columns) = (
                 load_data(train_end=train_end, val_start=val_start, val_end=val_end,))
 
-            inspect_observation(train_windows[0])
+            inspect_observation(train_windows[0], feature_columns)
 
 
             # create the environments
@@ -76,7 +73,7 @@ def run_training(rl_algorithm="PPO"):
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
-
+            run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1,)
     results_df = pd.DataFrame(validation_results)
 
     print("\n=== Validation Results ===")
@@ -115,8 +112,7 @@ def run_training(rl_algorithm="PPO"):
     model.learn(total_timesteps=200_000)
     model.save("../models/final_model")
 
-    run_debugging_info(model, test_env, test_returns, seed=0,
-        rl_algorithm=PPO if isinstance(model, PPO) else SAC,)
+    run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
 
 
 if __name__ == "__main__":

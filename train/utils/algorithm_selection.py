@@ -2,6 +2,7 @@
 This module encapsulated procedures for choosing which Reinforcement Learning algorithm to use
 """
 from stable_baselines3 import PPO, SAC
+from sb3_contrib import RecurrentPPO
 
 def create_model(rl_algorithm, train_env, seed=None):
     """
