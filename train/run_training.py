@@ -65,7 +65,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000):
             val_env.reset(seed=seed)
 
             model = create_model(rl_algorithm, train_env, seed,)
-            model.learn(total_timesteps=200_000,)
+            model.learn(total_timesteps=total_timesteps)
 
             # best_model saved automatically during training based on val performance
             # final_model is the state after the last update
