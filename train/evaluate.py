@@ -174,3 +174,23 @@ def regime_analysis(weights, returns):
     print("\nBear market allocation")
     print("--------------------------------")
     print(np.mean(bear_weights, axis=0))
+
+def print_validation_results(results_df):
+    print("\n=== Validation Results ===")
+    print(results_df)
+    fold_results = (
+        results_df
+        .groupby("fold")
+        .agg({
+            "Annual Return": "mean",
+            "Annual Volatility": "mean",
+            "Sharpe Ratio": "mean",
+            "Max Drawdown": "mean",
+        })
+    )
+    print("\n=== Fold Results ===")
+    print(fold_results)
+    mean_sharpe = fold_results["Sharpe Ratio"].mean()
+    worst_sharpe = fold_results["Sharpe Ratio"].min()
+    print(f"\nMean Fold Sharpe: {mean_sharpe:.4f}")
+    print(f"Worst Fold Sharpe: {worst_sharpe:.4f}")

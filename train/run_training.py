@@ -19,7 +19,7 @@ from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 from train.utils.algorithm_selection import create_model
-from train.evaluate import evaluate_and_compute_metrics
+from train.evaluate import evaluate_and_compute_metrics, print_validation_results
 
 seeds = [0, 1, 2, 3, 4]
 folds = [
@@ -76,24 +76,8 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000):
             run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1,)
     results_df = pd.DataFrame(validation_results)
 
-    print("\n=== Validation Results ===")
-    print(results_df)
-    fold_results = (
-        results_df
-        .groupby("fold")
-        .agg({
-            "Annual Return": "mean",
-            "Annual Volatility": "mean",
-            "Sharpe Ratio": "mean",
-            "Max Drawdown": "mean",
-        })
-    )
-    print("\n=== Fold Results ===")
-    print(fold_results)
-    mean_sharpe = fold_results["Sharpe Ratio"].mean()
-    worst_sharpe = fold_results["Sharpe Ratio"].min()
-    print(f"\nMean Fold Sharpe: {mean_sharpe:.4f}")
-    print(f"Worst Fold Sharpe: {worst_sharpe:.4f}")
+    # Print validation results
+    print_validation_results(results_df)
 
     # Final training on all data up to 2021
     (
