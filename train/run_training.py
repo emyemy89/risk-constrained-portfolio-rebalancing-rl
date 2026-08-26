@@ -28,7 +28,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="PPO"):
+def run_training(rl_algorithm="PPO", total_timesteps=200_000):
     """
         Train RL agents for portfolio allocation.
 
@@ -109,7 +109,7 @@ def run_training(rl_algorithm="PPO"):
 
     model = create_model(rl_algorithm, train_env, seed=0)
 
-    model.learn(total_timesteps=200_000)
+    model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
     run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
