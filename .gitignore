@@ -20,3 +20,4 @@ models/
 # Main statistics
 train/results/
 *.png
+*.txt
