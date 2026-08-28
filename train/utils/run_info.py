@@ -105,3 +105,5 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
     plot_cash_weight(results["weights"])
     plt.savefig(os.path.join(out_dir, "cash_weight.png"))
     plt.close()
+
+    return metrics

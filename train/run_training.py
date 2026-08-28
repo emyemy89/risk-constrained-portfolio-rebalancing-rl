@@ -80,9 +80,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000):
     print_validation_results(results_df)
 
     # Final training on all data up to 2021
-    (
-        train_windows, train_returns,
-        test_windows,test_returns,
+    (train_windows, train_returns, test_windows,test_returns,
     ) = load_test_data()
 
     train_env = make_env(train_windows, train_returns)
@@ -96,7 +94,8 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000):
     model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
-    run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
+    final_metrics = run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
+    return final_metrics
 
 if __name__ == "__main__":
     run_training()
