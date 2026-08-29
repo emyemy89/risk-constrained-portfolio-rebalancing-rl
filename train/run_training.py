@@ -57,7 +57,6 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
 
             inspect_observation(train_windows[0], feature_columns)
 
-
             # create the environments
             train_env = make_env(train_windows, train_returns)
             val_env = make_env(val_windows, val_returns)
@@ -67,10 +66,6 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
 
             model = create_model(rl_algorithm, train_env, seed,)
             model.learn(total_timesteps=total_timesteps)
-
-            # best_model saved automatically during training based on val performance
-            # final_model is the state after the last update
-            #model.save(f"../models/final_model_seed_{seed}")
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
@@ -95,7 +90,8 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
     model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
-    final_metrics = run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final", asset_names=asset_names)
+    final_metrics = run_debugging_info(model, test_env,
+                                       test_returns, seed=0, fold_idx="final", asset_names=asset_names)
     return final_metrics
 
 if __name__ == "__main__":
