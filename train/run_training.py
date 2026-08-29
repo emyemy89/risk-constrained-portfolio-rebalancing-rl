@@ -95,7 +95,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
     model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
-    final_metrics = run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
+    final_metrics = run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final", asset_names=asset_names)
     return final_metrics
 
 if __name__ == "__main__":
