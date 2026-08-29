@@ -6,3 +6,4 @@ yfinance
 gymnasium
 stable-baselines3[extra]
 torch
+pytest

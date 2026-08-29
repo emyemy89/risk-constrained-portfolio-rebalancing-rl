@@ -147,29 +147,29 @@ class PortfolioEnv(gym.Env):
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
 
-        # One-day return (used for portfolio evolution)
-        next_returns = self.returns[self.current_step + 1]
-        portfolio_return = np.dot(weights, next_returns)
-
-        # Deduct transaction costs from wealth
+        # One-day asset log returns
+        next_log_returns = self.returns[self.current_step + 1]
+        # Convert asset log returns to simple returns
+        next_simple_returns = np.expm1(next_log_returns)
+        # Portfolio simple return
+        portfolio_return = np.dot(weights, next_simple_returns)
+        # Transaction costs
         cost = self.transaction_cost * turnover
-        self.portfolio_value *= np.exp(portfolio_return) * (1.0 - cost)
-        # Store net return for risk estimation
-        net_portfolio_return = portfolio_return + np.log1p(-cost)
+        # Net portfolio return after transaction costs
+        net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
+        # Portfolio wealth evolution
+        self.portfolio_value *= (1.0 + net_portfolio_return)
+
+        # Store net simple return
         self.portfolio_returns.append(net_portfolio_return)
-        # Calculate return for a set horizon
-        future_returns = self.returns[
-            self.current_step + 1:
-            self.current_step + 1 + self.reward_horizon
-        ]
 
         # Compute Reward
-        reward = np.sum(future_returns @ weights)
+        reward = np.log( (1.0 + portfolio_return)* (1.0 - cost))
         reward -= cost
 
         # Make losses more costly
-        if portfolio_return < 0:
-            reward += 0.5 * portfolio_return
+        # if portfolio_return < 0:
+        #     reward += 0.5 * portfolio_return
 
         # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:
