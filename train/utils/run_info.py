@@ -19,7 +19,7 @@ from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_we
 from train.experiments.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
+def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_names):
     """
     Run post-training evaluation and save experiment diagnostics.
 
@@ -55,7 +55,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
         print("Equal:", equal, "\n")
 
         print("--- Weight statistics ---")
-        weight_statistics(results["weights"])
+        weight_statistics(results["weights"], asset_names)
 
         print("\n--- PPO metrics ---")
         for k, v in metrics.items():
@@ -98,7 +98,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
     plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
     plt.close()
 
-    plot_weights(results["weights"])
+    plot_weights(results["weights"], asset_names)
     plt.savefig(os.path.join(out_dir, "weights.png"))
     plt.close()
 

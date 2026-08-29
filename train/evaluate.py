@@ -98,11 +98,10 @@ def evaluate_and_compute_metrics(model, env):
     )
     return metrics
 
-def weight_statistics(weights):
+def weight_statistics(weights, asset_names):
     """
     Print summary statistics for portfolio weights
     """
-    asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"]
     print("\nWeight statistics")
     print("-" * 60)
     for i, asset in enumerate(asset_names):

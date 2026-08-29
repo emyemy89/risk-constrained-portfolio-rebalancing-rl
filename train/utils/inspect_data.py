@@ -22,7 +22,7 @@ def plot_portfolios(strategy_values):
     plt.grid(True)
     plt.show()
 
-def plot_weights(weights):
+def plot_weights(weights, asset_names):
     """
     Plot portfolio allocation changes over time.
 
@@ -30,11 +30,11 @@ def plot_weights(weights):
     asset evolve during evaluation.
     """
     plt.figure(figsize=(10,5))
-    plt.stackplot(range(len(weights)),weights.T, labels=["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
+    plt.stackplot(range(len(weights)),weights.T, labels=asset_names)
     plt.title("PPO Portfolio Weights")
     plt.xlabel("Trading Days")
     plt.ylabel("Weight")
-    plt.legend(["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"])
+    plt.legend(asset_names)
     plt.grid(True)
     plt.show()
 

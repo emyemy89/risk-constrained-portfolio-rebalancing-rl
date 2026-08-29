@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+from data.extract.load_data import ASSET_NAMES
 from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
@@ -28,7 +29,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="PPO", total_timesteps=50_000):
+def run_training(rl_algorithm="PPO", total_timesteps=50_000, asset_names=ASSET_NAMES):
     """
         Train RL agents for portfolio allocation.
 
@@ -73,7 +74,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=50_000):
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
-            run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1,)
+            run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1, asset_names=asset_names)
     results_df = pd.DataFrame(validation_results)
 
     # Print validation results
