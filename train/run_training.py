@@ -69,7 +69,8 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
-            run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1, asset_names=asset_names)
+            run_debugging_info(model, val_env, val_returns,
+                               seed=seed,fold_idx=fold_idx + 1, asset_names=asset_names)
     results_df = pd.DataFrame(validation_results)
 
     # Print validation results
@@ -90,8 +91,8 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_
     model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
-    final_metrics = run_debugging_info(model, test_env,
-                                       test_returns, seed=0, fold_idx="final", asset_names=asset_names)
+    final_metrics = run_debugging_info(model, test_env, test_returns,
+                                       seed=0, fold_idx="final", asset_names=asset_names)
     return final_metrics
 
 if __name__ == "__main__":
