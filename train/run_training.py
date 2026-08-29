@@ -29,7 +29,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="PPO", total_timesteps=50_000, asset_names=ASSET_NAMES):
+def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_NAMES):
     """
         Train RL agents for portfolio allocation.
 
