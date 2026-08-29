@@ -48,7 +48,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
         momentum_returns = run_momentum_strategy(test_returns, lookback=20)
 
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
-        equal = evaluate_baseline(test_returns, np.ones(6) / 6)
+        equal = evaluate_baseline(test_returns, (np.ones(len(asset_names)+1) / len(asset_names)+1))
         print("--- Baseline comparison ---")
         print("PPO:", metrics)
         print("SPY:", spy)
@@ -90,7 +90,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
     # plots
     ppo_values = results["portfolio_values"]
     spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
-    equal_returns = test_returns @ (np.ones(6) / 6)
+    equal_returns = test_returns @ (np.ones(len(asset_names)+1) / len(asset_names)+1)
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
 
