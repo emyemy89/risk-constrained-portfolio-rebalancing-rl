@@ -1,24 +1,25 @@
 """
-Experiment for different values of timesteps used in PPO agent training
+Experiment: effect of PPO training timesteps.
+
+Each timestep is trained with multiple random seeds and evaluated
+on the same validation period.
 """
-import matplotlib.pyplot as plt
-import pandas as pd
+
 import random
 import numpy as np
+import pandas as pd
 import torch
+import matplotlib.pyplot as plt
 
-from data.pipeline import load_test_data
+from data.pipeline import load_data
 from train.make_env import make_env
 from train.utils.algorithm_selection import create_model
-from train.utils.run_info import run_debugging_info
-from data.extract.load_data import ASSET_NAMES
+from train.evaluate import evaluate_and_compute_metrics
 
 
 TIMESTEPS = [
-    10_000,
     50_000,
     100_000,
-    150_000,
     200_000,
     300_000,
     500_000,
@@ -27,104 +28,155 @@ TIMESTEPS = [
     10_000_000,
 ]
 
-SEED = 0
+SEEDS = [0, 1, 2, 3, 4]
 
 
-# -------------------------------------------------------------------
-# Load data once
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# Load one fixed validation split
+# ---------------------------------------------------------
 
-train_windows, train_returns, test_windows, test_returns = load_test_data()
+(
+    train_windows,
+    train_returns,
+    val_windows,
+    val_returns,
+    feature_columns,
+) = load_data(
+    train_end="2018-12-31",
+    val_start="2019-01-01",
+    val_end="2021-12-31",
+)
 
 
 results = []
 
 
-# -------------------------------------------------------------------
-# Train and evaluate one independent model per timestep
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# Run every timestep with every seed
+# ---------------------------------------------------------
 
 for total_timesteps in TIMESTEPS:
 
-    print(f"\n===== {total_timesteps:,} timesteps =====")
+    for seed in SEEDS:
 
-    # Reset all random generators so every experiment starts
-    # from the same random state.
-    random.seed(SEED)
-    np.random.seed(SEED)
-    torch.manual_seed(SEED)
+        print(
+            f"\n===== {total_timesteps:,} timesteps | "
+            f"seed {seed} ====="
+        )
 
-    # Create completely fresh environments
-    train_env = make_env(train_windows, train_returns)
-    test_env = make_env(test_windows, test_returns)
+        # Reset random state
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    train_env.reset(seed=SEED)
-    test_env.reset(seed=SEED)
+        # Fresh environments
+        train_env = make_env(
+            train_windows,
+            train_returns,
+        )
 
-    # Create a completely fresh model
-    model = create_model(
-        rl_algorithm="PPO",
-        train_env=train_env,
-        seed=SEED,
-    )
+        val_env = make_env(
+            val_windows,
+            val_returns,
+        )
 
-    # Train only for the requested number of timesteps
-    model.learn(total_timesteps=total_timesteps)
+        train_env.reset(seed=seed)
+        val_env.reset(seed=seed)
 
-    # Evaluate on the same untouched test set
-    metrics = run_debugging_info(
-        model,
-        test_env,
-        test_returns,
-        seed=SEED,
-        fold_idx=f"timesteps_{total_timesteps}",
-        asset_names=ASSET_NAMES,
-    )
+        # Fresh PPO model
+        model = create_model(
+            rl_algorithm="PPO",
+            train_env=train_env,
+            seed=seed,
+        )
 
-    results.append({
-        "timesteps": total_timesteps,
-        "Annual Return": metrics["Annual Return"],
-        "Annual Volatility": metrics["Annual Volatility"],
-        "Sharpe Ratio": metrics["Sharpe Ratio"],
-        "Max Drawdown": metrics["Max Drawdown"],
-    })
+        # Train
+        model.learn(
+            total_timesteps=total_timesteps
+        )
 
-    # Explicitly close environments
-    train_env.close()
-    test_env.close()
+        # Evaluate on validation set
+        metrics = evaluate_and_compute_metrics(
+            model,
+            val_env,
+        )
+
+        results.append({
+            "timesteps": total_timesteps,
+            "seed": seed,
+            "Annual Return": metrics["Annual Return"],
+            "Annual Volatility": metrics["Annual Volatility"],
+            "Sharpe Ratio": metrics["Sharpe Ratio"],
+            "Max Drawdown": metrics["Max Drawdown"],
+        })
+
+        train_env.close()
+        val_env.close()
 
 
-# -------------------------------------------------------------------
-# Results
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# Raw results
+# ---------------------------------------------------------
 
 results_df = pd.DataFrame(results)
 
-print("\n===== Results =====")
+print("\n===== Individual Results =====")
 print(results_df.to_string(index=False))
 
 
-# -------------------------------------------------------------------
-# Plots
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# Aggregate across seeds
+# ---------------------------------------------------------
+
+summary = (
+    results_df
+    .groupby("timesteps")
+    .agg({
+        "Annual Return": ["mean", "std"],
+        "Annual Volatility": ["mean", "std"],
+        "Sharpe Ratio": ["mean", "std"],
+        "Max Drawdown": ["mean", "std"],
+    })
+)
+
+print("\n===== Mean ± Std Across Seeds =====")
+print(summary)
+
+
+# ---------------------------------------------------------
+# Plot mean performance
+# ---------------------------------------------------------
+
+mean_results = (
+    results_df
+    .groupby("timesteps")
+    .mean(numeric_only=True)
+    .reset_index()
+)
+
 
 metrics_to_plot = [
-    ("Annual Return", "Annual Return vs Training Timesteps"),
-    ("Annual Volatility", "Annual Volatility vs Training Timesteps"),
-    ("Sharpe Ratio", "Sharpe Ratio vs Training Timesteps"),
-    ("Max Drawdown", "Maximum Drawdown vs Training Timesteps"),
+    ("Annual Return", "Mean Annual Return"),
+    ("Annual Volatility", "Mean Annual Volatility"),
+    ("Sharpe Ratio", "Mean Sharpe Ratio"),
+    ("Max Drawdown", "Mean Maximum Drawdown"),
 ]
 
+
 for metric, title in metrics_to_plot:
+
     plt.figure()
+
     plt.plot(
-        results_df["timesteps"],
-        results_df[metric],
+        mean_results["timesteps"],
+        mean_results[metric],
         marker="o",
     )
+
     plt.xscale("log")
-    plt.xlabel("Total Timesteps")
+    plt.xlabel("Training Timesteps")
     plt.ylabel(metric)
     plt.title(title)
     plt.grid()
+
     plt.show()
