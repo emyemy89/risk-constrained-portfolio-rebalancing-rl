@@ -98,11 +98,10 @@ def evaluate_and_compute_metrics(model, env):
     )
     return metrics
 
-def weight_statistics(weights):
+def weight_statistics(weights, asset_names):
     """
     Print summary statistics for portfolio weights
     """
-    asset_names = ["SPY", "QQQ", "TLT", "GLD", "VNQ", "CASH"]
     print("\nWeight statistics")
     print("-" * 60)
     for i, asset in enumerate(asset_names):
@@ -174,3 +173,23 @@ def regime_analysis(weights, returns):
     print("\nBear market allocation")
     print("--------------------------------")
     print(np.mean(bear_weights, axis=0))
+
+def print_validation_results(results_df):
+    print("\n=== Validation Results ===")
+    print(results_df)
+    fold_results = (
+        results_df
+        .groupby("fold")
+        .agg({
+            "Annual Return": "mean",
+            "Annual Volatility": "mean",
+            "Sharpe Ratio": "mean",
+            "Max Drawdown": "mean",
+        })
+    )
+    print("\n=== Fold Results ===")
+    print(fold_results)
+    mean_sharpe = fold_results["Sharpe Ratio"].mean()
+    worst_sharpe = fold_results["Sharpe Ratio"].min()
+    print(f"\nMean Fold Sharpe: {mean_sharpe:.4f}")
+    print(f"Worst Fold Sharpe: {worst_sharpe:.4f}")
