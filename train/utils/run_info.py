@@ -48,7 +48,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
         momentum_returns = run_momentum_strategy(test_returns, lookback=20)
 
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
-        equal = evaluate_baseline(test_returns, (np.ones(len(asset_names)+1) / (len(asset_names)+1)))
+        equal = evaluate_baseline(test_returns, (np.ones(len(asset_names)+1) /(len(asset_names)+1)))
         print("--- Baseline comparison ---")
         print("PPO:", metrics)
         print("SPY:", spy)
@@ -83,7 +83,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
     output = buffer.getvalue()
     print(output)  # still show it in console
 
-    with open(log_path, "w") as f:
+    with open(log_path, "w", encoding="utf-8") as f:
         f.write(output)
     print(f"\nSaved debug info to {log_path}")
 
