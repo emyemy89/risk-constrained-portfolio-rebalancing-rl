@@ -59,7 +59,7 @@ class PortfolioEnv(gym.Env):
             windows,
             returns,
             initial_cash=1.0,
-            risk_lambda=0.00,
+            risk_lambda=0.003,
             volatility_window=20,
             transaction_cost=0.0005,
             reward_horizon=1,
@@ -165,7 +165,6 @@ class PortfolioEnv(gym.Env):
 
         # Compute Reward
         reward = np.log( (1.0 + portfolio_return)* (1.0 - cost))
-        reward -= cost
 
         # Make losses more costly
         # if portfolio_return < 0:
