@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from data.extract.load_data import ASSET_NAMES
+from data.extract.load_data import ETF_TICKERS
 from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
@@ -29,7 +29,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_NAMES):
+def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ETF_TICKERS):
     """
         Train RL agents for portfolio allocation.
 
