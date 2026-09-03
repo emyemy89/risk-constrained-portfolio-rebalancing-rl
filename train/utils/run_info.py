@@ -19,7 +19,7 @@ from train.utils.inspect_data import plot_portfolios, plot_weights, plot_cash_we
 from train.experiments.momentum_baseline import run_momentum_strategy, calculate_metrics
 
 
-def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
+def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_names):
     """
     Run post-training evaluation and save experiment diagnostics.
 
@@ -48,14 +48,14 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
         momentum_returns = run_momentum_strategy(test_returns, lookback=20)
 
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
-        equal = evaluate_baseline(test_returns, np.ones(6) / 6)
+        equal = evaluate_baseline(test_returns, (np.ones(len(asset_names)+1) /(len(asset_names)+1)))
         print("--- Baseline comparison ---")
         print(f"{rl_algorithm}:", metrics)
         print("SPY:", spy)
         print("Equal:", equal, "\n")
 
         print("--- Weight statistics ---")
-        weight_statistics(results["weights"])
+        weight_statistics(results["weights"], asset_names)
 
         print(f"\n--- {rl_algorithm} metrics ---")
         for k, v in metrics.items():
@@ -83,14 +83,14 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
     output = buffer.getvalue()
     print(output)  # still show it in console
 
-    with open(log_path, "w") as f:
+    with open(log_path, "w", encoding="utf-8") as f:
         f.write(output)
     print(f"\nSaved debug info to {log_path}")
 
     # plots
     rl_algorithm_values = results["portfolio_values"]
     spy_returns = test_returns @ np.array([1, 0, 0, 0, 0, 0])
-    equal_returns = test_returns @ (np.ones(6) / 6)
+    equal_returns = test_returns @ (np.ones(len(asset_names)+1) / (len(asset_names)+1))
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
 
@@ -98,10 +98,12 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx):
     plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
     plt.close()
 
-    plot_weights(results["weights"])
+    plot_weights(results["weights"], asset_names)
     plt.savefig(os.path.join(out_dir, "weights.png"))
     plt.close()
 
     plot_cash_weight(results["weights"])
     plt.savefig(os.path.join(out_dir, "cash_weight.png"))
     plt.close()
+
+    return metrics

@@ -14,12 +14,13 @@ import numpy as np
 import pandas as pd
 import torch
 
+from data.extract.load_data import ASSET_NAMES
 from data.pipeline import load_data, load_test_data
 from train.make_env import make_env
 from train.utils.inspect_data import inspect_observation
 from train.utils.run_info import run_debugging_info
 from train.utils.algorithm_selection import create_model
-from train.evaluate import evaluate_and_compute_metrics
+from train.evaluate import evaluate_and_compute_metrics, print_validation_results
 
 seeds = [0, 1, 2, 3, 4]
 folds = [
@@ -28,7 +29,7 @@ folds = [
     ("2016-12-31", "2017-01-01", "2018-12-31"),
     ("2018-12-31", "2019-01-01", "2020-12-31"),]
 
-def run_training(rl_algorithm="PPO"):
+def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ASSET_NAMES):
     """
         Train RL agents for portfolio allocation.
 
@@ -56,7 +57,6 @@ def run_training(rl_algorithm="PPO"):
 
             inspect_observation(train_windows[0], feature_columns)
 
-
             # create the environments
             train_env = make_env(train_windows, train_returns)
             val_env = make_env(val_windows, val_returns)
@@ -65,40 +65,19 @@ def run_training(rl_algorithm="PPO"):
             val_env.reset(seed=seed)
 
             model = create_model(rl_algorithm, train_env, seed,)
-            model.learn(total_timesteps=200_000,)
-
-            # best_model saved automatically during training based on val performance
-            # final_model is the state after the last update
-            #model.save(f"../models/final_model_seed_{seed}")
+            model.learn(total_timesteps=total_timesteps)
 
             metrics = evaluate_and_compute_metrics(model, val_env)
             validation_results.append({"fold": fold_idx + 1,"seed": seed, **metrics,})
-            run_debugging_info(model, val_env, val_returns, seed=seed,fold_idx=fold_idx + 1,)
+            run_debugging_info(model, val_env, val_returns,
+                               seed=seed,fold_idx=fold_idx + 1, asset_names=asset_names)
     results_df = pd.DataFrame(validation_results)
 
-    print("\n=== Validation Results ===")
-    print(results_df)
-    fold_results = (
-        results_df
-        .groupby("fold")
-        .agg({
-            "Annual Return": "mean",
-            "Annual Volatility": "mean",
-            "Sharpe Ratio": "mean",
-            "Max Drawdown": "mean",
-        })
-    )
-    print("\n=== Fold Results ===")
-    print(fold_results)
-    mean_sharpe = fold_results["Sharpe Ratio"].mean()
-    worst_sharpe = fold_results["Sharpe Ratio"].min()
-    print(f"\nMean Fold Sharpe: {mean_sharpe:.4f}")
-    print(f"Worst Fold Sharpe: {worst_sharpe:.4f}")
+    # Print validation results
+    print_validation_results(results_df)
 
     # Final training on all data up to 2021
-    (
-        train_windows, train_returns,
-        test_windows,test_returns,
+    (train_windows, train_returns, test_windows,test_returns,
     ) = load_test_data()
 
     train_env = make_env(train_windows, train_returns)
@@ -109,10 +88,12 @@ def run_training(rl_algorithm="PPO"):
 
     model = create_model(rl_algorithm, train_env, seed=0)
 
-    model.learn(total_timesteps=200_000)
+    model.learn(total_timesteps=total_timesteps)
     model.save("../models/final_model")
 
-    run_debugging_info(model, test_env, test_returns, seed=0, fold_idx="final")
+    final_metrics = run_debugging_info(model, test_env, test_returns,
+                                       seed=0, fold_idx="final", asset_names=asset_names)
+    return final_metrics
 
 
 if __name__ == "__main__":

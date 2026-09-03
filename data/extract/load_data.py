@@ -4,13 +4,14 @@ This module downloads historical price data of assets used in training, validati
 """
 import yfinance as yf
 
+ASSET_NAMES=["SPY","QQQ","EEM","GLD","XLE"] #Cash loaded in /data/data_engineering/features_def.py
 
 def load_etf_data():
     """
     Download historical price data for assets used in the project
     """
     return yf.download(
-    ["SPY", "QQQ", "EEM", "GLD", "XLE"], # Cash is loaded in /data/data_engineering/features_def.py
+            ASSET_NAMES,
             start="2000-01-01",
             end="2026-01-01",
             auto_adjust=True

@@ -167,10 +167,6 @@ class PortfolioEnv(gym.Env):
         reward = np.log( (1.0 + portfolio_return)* (1.0 - cost))
         reward -= cost
 
-        # Make losses more costly
-        # if portfolio_return < 0:
-        #     reward += 0.5 * portfolio_return
-
         # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:
             recent_returns = self.portfolio_returns[-self.volatility_window:]

@@ -158,7 +158,6 @@ def test_step_returns_valid_observation():
 def test_portfolio_value_updates_with_returns():
     """
     Test portfolio evaluation
-    :return:
     """
     returns = np.array([
         [0.0, 0.0, 0.0],
@@ -181,8 +180,9 @@ def test_portfolio_value_updates_with_returns():
     env.reset()
     action = np.zeros(3, dtype=np.float32)
     _, _, _, _, info = env.step(action)
-    expected_return = np.mean([0.01, 0.02, 0.03])
-    expected_value = np.exp(expected_return)
+    expected_simple_returns = np.expm1([0.01, 0.02, 0.03])
+    expected_return = np.mean(expected_simple_returns)
+    expected_value = 1.0 + expected_return
     assert np.isclose(
         env.portfolio_value,
         expected_value,
