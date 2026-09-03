@@ -57,7 +57,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
         print("--- Weight statistics ---")
         weight_statistics(results["weights"], asset_names)
 
-        print("PPO metrics ---")
+        print("--- PPO metrics ---")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
         print()
