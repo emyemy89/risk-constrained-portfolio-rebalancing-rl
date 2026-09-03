@@ -11,6 +11,43 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 
+DEFAULT_MAX_WEIGHT_CHANGE = 0.2
+
+def project_to_bounded_simplex(values, lower, upper):
+    """Project values onto the simplex subject to lower and upper bounds."""
+    values = np.asarray(values, dtype=np.float64)
+    # The solution has the form clip(values - theta, lower, upper).
+    # Find theta such that the projected weights sum to 1.
+    theta_low = np.min(values - upper)
+    theta_high = np.max(values - lower)
+    for _ in range(60):
+        theta = (theta_low + theta_high) / 2.0
+        weights = np.clip(values - theta, lower, upper)
+        if np.sum(weights) > 1.0:
+            theta_low = theta
+        else:
+            theta_high = theta
+    return np.clip( values - (theta_low + theta_high) / 2.0, lower, upper,)
+
+def action_to_weights(
+                      action,
+                      prev_weights,
+                      max_weight_change=DEFAULT_MAX_WEIGHT_CHANGE,
+                      ):
+    """
+    Convert a PPO action in [-1, 1] into a valid portfolio allocation.
+    Desired weights are previous weights plus ``action * max_weight_change``,
+    then projected onto the simplex with box constraints so that:
+    weights are in [0, 1], sum to 1, and no asset moves by more than
+    ``max_weight_change``.
+    """
+    prev_weights = np.asarray(prev_weights, dtype=np.float64)
+    action = np.clip(np.asarray(action, dtype=np.float64), -1.0, 1.0)
+    desired_weights = prev_weights + action * max_weight_change
+    lower = np.maximum(0.0, prev_weights - max_weight_change)
+    upper = np.minimum(1.0, prev_weights + max_weight_change)
+    return project_to_bounded_simplex(desired_weights, lower, upper)
+
 
 class PortfolioEnv(gym.Env):
     """
@@ -81,7 +118,7 @@ class PortfolioEnv(gym.Env):
         self.initial_value = initial_cash
 
         # Action
-        self.max_weight_change = 0.2 # Do not go more than 20% in allocation in one step
+        self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE # Do not go more than 20% in allocation in one step
         self.action_space = spaces.Box(
             low=-1,
             high=1,
@@ -116,21 +153,6 @@ class PortfolioEnv(gym.Env):
         portfolio_state = self.prev_weights.astype(np.float32)
         return np.concatenate([market_obs.flatten(),portfolio_state])
 
-    def _project_to_bounded_simplex(self, values, lower, upper):
-        """Project values onto the simplex subject to lower and upper bounds."""
-        values = np.asarray(values, dtype=np.float64)
-        # The solution has the form clip(values - theta, lower, upper).
-        # Find theta such that the projected weights sum to 1.
-        theta_low = np.min(values - upper)
-        theta_high = np.max(values - lower)
-        for _ in range(60):
-            theta = (theta_low + theta_high) / 2.0
-            weights = np.clip(values - theta, lower, upper)
-            if np.sum(weights) > 1.0:
-                theta_low = theta
-            else:
-                theta_high = theta
-        return np.clip( values - (theta_low + theta_high) / 2.0, lower, upper,)
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
@@ -140,9 +162,8 @@ class PortfolioEnv(gym.Env):
         # Normalization, enforce:
         #   (1) weights >= 0      (2) weights <= 1
         #   (3) sum(weights) = 1  (4) |weights - prev_weights| <= max_weight_change
-        lower = np.maximum(0.0, self.prev_weights - self.max_weight_change,)
-        upper = np.minimum(1.0, self.prev_weights + self.max_weight_change,)
-        weights = self._project_to_bounded_simplex(desired_weights, lower, upper,)
+        weights = action_to_weights(action, self.prev_weights,
+                                    max_weight_change=self.max_weight_change,)
 
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
