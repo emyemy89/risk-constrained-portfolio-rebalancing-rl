@@ -44,9 +44,7 @@ def _resolve_weights(current_weights, asset_names):
     return weights
 
 
-def predict_allocation(
-    current_weights, *, model_path=None,
-    market_data=None, model=None):
+def predict_allocation(current_weights, *, model_path=None, market_data=None, model=None):
     """
     Recommend a portfolio allocation from the frozen PPO model.
 
