@@ -50,14 +50,14 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
         spy = evaluate_baseline(test_returns, np.array([1, 0, 0, 0, 0, 0]))
         equal = evaluate_baseline(test_returns, (np.ones(len(asset_names)+1) /(len(asset_names)+1)))
         print("--- Baseline comparison ---")
-        print(f"{rl_algorithm}:", metrics)
+        print("PPO", metrics)
         print("SPY:", spy)
         print("Equal:", equal, "\n")
 
         print("--- Weight statistics ---")
         weight_statistics(results["weights"], asset_names)
 
-        print(f"\n--- {rl_algorithm} metrics ---")
+        print("--- PPO metrics ---")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
         print()
@@ -94,7 +94,7 @@ def run_debugging_info(model, test_env, test_returns, seed, fold_idx, asset_name
     spy_values = np.exp(np.cumsum(spy_returns))
     equal_values = np.exp(np.cumsum(equal_returns))
 
-    plot_portfolios({f"{rl_algorithm}": rl_algorithm_values, "SPY": spy_values, "Equal Weight": equal_values})
+    plot_portfolios({"PPO": rl_algorithm_values, "SPY": spy_values, "Equal Weight": equal_values})
     plt.savefig(os.path.join(out_dir, "portfolio_values.png"))
     plt.close()
 

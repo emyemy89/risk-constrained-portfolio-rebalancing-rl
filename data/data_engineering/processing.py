@@ -60,6 +60,27 @@ def split_test_data(data, train_end="2021-12-31", test_start="2022-01-01"):
     return train_data, test_data
 
 
+### NORMALIZATION LOGIC: fit_feature_scaler(), apply_feature_scaler(), scale_features()
+def fit_feature_scaler(train_features):
+    """
+    Fit a z-score scaler on training features only.
+    """
+    scaler = StandardScaler()
+    scaler.fit(train_features)
+    return scaler
+
+
+def apply_feature_scaler(features, scaler):
+    """
+    Apply a previously fitted scaler, preserving index and columns.
+    """
+    return pd.DataFrame(
+        scaler.transform(features),
+        index=features.index,
+        columns=features.columns,
+    )
+
+
 def scale_features(train_features, val_features):
     """
     Scale features based on scaling factors
@@ -67,17 +88,7 @@ def scale_features(train_features, val_features):
     :param val_features: The set of concatenated features of assets for validation
     :return: train_scaled, val_scaled, test_scaled
     """
-    scaler = StandardScaler()
-    scaler.fit(train_features)
-    train_scaled = pd.DataFrame(
-        scaler.transform(train_features),
-        index=train_features.index,
-        columns=train_features.columns,
-    )
-    val_scaled = pd.DataFrame(
-        scaler.transform(val_features),
-        index=val_features.index,
-        columns=val_features.columns,
-    )
-
+    scaler = fit_feature_scaler(train_features)
+    train_scaled = apply_feature_scaler(train_features, scaler)
+    val_scaled = apply_feature_scaler(val_features, scaler)
     return train_scaled, val_scaled
