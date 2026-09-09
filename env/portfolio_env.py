@@ -183,8 +183,7 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns.append(net_portfolio_return)
 
         # Compute Reward
-        reward = np.log( (1.0 + portfolio_return)* (1.0 - cost))
-        reward -= cost
+        reward = np.log1p(net_portfolio_return)
 
         # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:
