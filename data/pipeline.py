@@ -92,33 +92,14 @@ def load_test_data(train_end=DEFAULT_TRAIN_END, test_start=DEFAULT_TEST_START,
         test_windows, test_returns,)
 
 
-def load_latest_observation(
-    train_end=DEFAULT_TRAIN_END,
-    obs_window_size=DEFAULT_OBS_WINDOW_SIZE,
-    rolling_window=DEFAULT_ROLLING_WINDOW,
-    market_data=None,
-):
+def load_latest_observation(train_end=DEFAULT_TRAIN_END, obs_window_size=DEFAULT_OBS_WINDOW_SIZE,
+    rolling_window=DEFAULT_ROLLING_WINDOW, market_data=None):
     """
     Build the latest model observation from current market data.
 
     Features are scaled with statistics fit only on the historical training
     period used by the saved model. The returned window ends at the most
     recent available feature date (no future rows).
-
-    Parameters
-    ----------
-    market_data : pd.DataFrame, optional
-        Pre-loaded Yahoo Finance-style price data. When omitted, prices are
-        downloaded through the latest available date.
-
-    Returns
-    -------
-    latest_window : np.ndarray
-        Shape (obs_window_size, n_features).
-    as_of_date : pandas.Timestamp
-        Date of the last row in the observation window.
-    asset_names : list[str]
-        Portfolio asset order, matching training-time returns columns.
     """
     if market_data is None:
         data = load_etf_data(end=None)
