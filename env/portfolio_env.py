@@ -156,8 +156,6 @@ class PortfolioEnv(gym.Env):
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        action = np.clip(action, -1.0, 1.0)
-        desired_weights = self.prev_weights + action * self.max_weight_change
 
         # Normalization, enforce:
         #   (1) weights >= 0      (2) weights <= 1
