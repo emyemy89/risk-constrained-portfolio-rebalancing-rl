@@ -37,6 +37,10 @@ def create_features(data, rolling_window):
     spy_ma200 = compute_trend_regime(200, aligned_prices)
     spy_drawdown = compute_drawdown(252, aligned_prices)
 
+    # For environment
+    valuation_signal = build_valuation_signal(aligned_prices)
+    valuation_signal["CASH"] = 0.0
+    valuation_signal = valuation_signal[log_returns.columns]
 
     # Combine the features
     features = pd.concat(
@@ -49,7 +53,7 @@ def create_features(data, rolling_window):
         ],axis=1, keys=["ret", "vol20", "mom20",
                         "corr", "spy_ma50", "spy_ma200", "spy_drawdown",]
     ).dropna()
-    return features, log_returns.loc[features.index]
+    return features, log_returns.loc[features.index], valuation_signal.loc[features.index]
 
 def compute_log_returns(aligned_prices):
     """
@@ -128,3 +132,11 @@ def compute_market_correlations(correlations):
     return correlations[
         [column for column in correlations.columns if column != "CASH_corr_SPY"]
     ].mean(axis=1).rename("market_correlation")
+
+def build_valuation_signal(prices):
+    """
+    Build valuation signal from prices
+    Positive = relatively cheap, negative = relatively expensive
+    """
+    valuation = -(prices / prices.rolling(252).mean() - 1)
+    return valuation.sub(valuation.mean(axis=1), axis=0).div(valuation.std(axis=1), axis=0)
