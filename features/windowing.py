@@ -10,24 +10,11 @@ import numpy as np
 import pandas as pd
 
 
-def create_windows(
-    data: pd.DataFrame,
-    window_size: int,
-) -> tuple[np.ndarray, pd.DatetimeIndex]:
+def create_windows(data: pd.DataFrame, window_size: int) \
+        -> tuple[np.ndarray, pd.DatetimeIndex]:
     """
     Convert a feature dataframe into rolling observation windows.
     We mainly do this to tweak the Markovian property, hoping that 30 days obs will be enough.
-    Parameters
-    ----------
-    data
-        Scaled feature dataframe.
-    window_size
-        Number of historical timesteps per observation.
-    Returns
-    -------
-    np.ndarray
-        Shape:
-        (num_samples, window_size, num_features)
     """
     # validation
     if data.empty or len(data) == 0:
@@ -46,10 +33,7 @@ def create_windows(
     return np.asarray(windows, dtype=np.float32), dates
 
 
-def window_generator(
-    data: pd.DataFrame,
-    window_size: int,
-):
+def window_generator(data: pd.DataFrame, window_size: int):
     """
     Memory-efficient rolling window generator.
     Yields one window at a time instead of storing all in memory.
