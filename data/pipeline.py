@@ -36,13 +36,15 @@ def load_data(train_end, val_start, val_end,
 
     #(2) Create financial features
     # Align assets -> Convert raw to log returns -> Calculate volatility and momentum -> Concatenate
-    features, returns = create_features(data,rolling_window)
+    features, returns, valuation_signal = create_features(data,rolling_window)
 
     #(3) Create Splits
     train_features, val_features = split_data(features,
         train_end=train_end, val_start=val_start, val_end=val_end)
     train_returns, val_returns = split_data(returns,
         train_end=train_end, val_start=val_start, val_end=val_end)
+    train_valuation_signal, val_valuation_signal = split_data(valuation_signal,
+                    train_end=train_end, val_start=val_start, val_end=val_end)
 
 
     # Normalize using z-score standardization fit on train set only
@@ -55,13 +57,17 @@ def load_data(train_end, val_start, val_end,
     # return must match the observation, so we shift
     offset = obs_window_size - 1
 
+    # Shift
     train_returns = train_returns.iloc[offset:].to_numpy()
     val_returns = val_returns.iloc[offset:].to_numpy()
+    train_valuation_signal = train_valuation_signal.iloc[offset:]
+    val_valuation_signal = val_valuation_signal.iloc[offset:]
 
     return (
         train_windows, train_returns,
         val_windows, val_returns,
         train_features.columns,
+        train_valuation_signal, val_valuation_signal,
     )
 
 def load_test_data(train_end=DEFAULT_TRAIN_END, test_start=DEFAULT_TEST_START,
@@ -69,11 +75,12 @@ def load_test_data(train_end=DEFAULT_TRAIN_END, test_start=DEFAULT_TEST_START,
     """Prepare final training and untouched test datasets."""
 
     data = validate_data(load_etf_data())
-    features, returns = create_features(data, rolling_window)
+    features, returns, valuation_signal = create_features(data, rolling_window)
 
     # (2) Split
     train_features, test_features = split_test_data(features, train_end, test_start)
     train_returns, test_returns = split_test_data(returns, train_end, test_start)
+    train_valuation, test_valuation = split_test_data(valuation_signal, train_end, test_start)
 
     # (3) Fit scaler ONLY on pre-test data
     train_scaled, test_scaled = scale_features(train_features, test_features)
@@ -86,10 +93,13 @@ def load_test_data(train_end=DEFAULT_TRAIN_END, test_start=DEFAULT_TEST_START,
     offset = obs_window_size - 1
     train_returns = train_returns.iloc[offset:].to_numpy()
     test_returns = test_returns.iloc[offset:].to_numpy()
+    train_valuation = train_valuation.iloc[offset:].to_numpy()
+    test_valuation = test_valuation.iloc[offset:].to_numpy()
 
     return (
         train_windows, train_returns,
-        test_windows, test_returns,)
+        test_windows, test_returns,
+        train_valuation, test_valuation)
 
 
 def load_latest_observation(train_end=DEFAULT_TRAIN_END, obs_window_size=DEFAULT_OBS_WINDOW_SIZE,
@@ -106,7 +116,7 @@ def load_latest_observation(train_end=DEFAULT_TRAIN_END, obs_window_size=DEFAULT
     else:
         data = market_data
     data = validate_data(data)
-    features, returns = create_features(data, rolling_window)
+    features, returns, _ = create_features(data, rolling_window)
     train_features = features.loc[:train_end]
     if train_features.empty:
         raise ValueError(
