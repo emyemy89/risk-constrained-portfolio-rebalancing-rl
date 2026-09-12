@@ -118,7 +118,7 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns = []
         self.initial_value = initial_cash
         self.valuation_signal = np.asarray(valuation_signal)
-        self.valuation_lambda = 0.0
+        self.valuation_lambda = 0.0001
 
         # Action
         self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE # Do not go more than 20% in allocation in one step
