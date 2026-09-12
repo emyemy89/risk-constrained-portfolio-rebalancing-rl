@@ -138,7 +138,7 @@ class PortfolioEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(obs_size,), # (3000, 19, 30) -> (19 x 30)+5
+            shape=(obs_size,), # (3000, 26, 30) -> (26 x 30)+5
             dtype=np.float32,
         )
 
