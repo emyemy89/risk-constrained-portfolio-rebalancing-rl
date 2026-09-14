@@ -95,6 +95,7 @@ class PortfolioEnv(gym.Env):
             self,
             windows,
             returns,
+            valuation_signal,
             initial_cash=1.0,
             risk_lambda=0.00,
             volatility_window=20,
@@ -116,6 +117,8 @@ class PortfolioEnv(gym.Env):
         self.prev_weights = np.ones(self.n_assets) / self.n_assets
         self.portfolio_returns = []
         self.initial_value = initial_cash
+        self.valuation_signal = np.asarray(valuation_signal)
+        self.valuation_lambda = 0.0001
 
         # Action
         self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE # Do not go more than 20% in allocation in one step
@@ -135,7 +138,7 @@ class PortfolioEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(obs_size,), # (3000, 19, 30) -> (19 x 30)+5
+            shape=(obs_size,), # (3000, 26, 30) -> (26 x 30)+5
             dtype=np.float32,
         )
 
@@ -156,8 +159,6 @@ class PortfolioEnv(gym.Env):
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
-        action = np.clip(action, -1.0, 1.0)
-        desired_weights = self.prev_weights + action * self.max_weight_change
 
         # Normalization, enforce:
         #   (1) weights >= 0      (2) weights <= 1
@@ -185,8 +186,9 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns.append(net_portfolio_return)
 
         # Compute Reward
-        reward = np.log( (1.0 + portfolio_return)* (1.0 - cost))
-        reward -= cost
+        reward = np.log1p(net_portfolio_return)
+        valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
+        reward += self.valuation_lambda * valuation_reward
 
         # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:

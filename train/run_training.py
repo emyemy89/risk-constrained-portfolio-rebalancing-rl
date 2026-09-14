@@ -52,14 +52,15 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ETF_TI
             np.random.seed(seed)
             torch.manual_seed(seed)
             # Data Loading
-            (train_windows, train_returns, val_windows, val_returns, feature_columns) = (
-                load_data(train_end=train_end, val_start=val_start, val_end=val_end,))
+            (train_windows, train_returns, val_windows, val_returns,
+                feature_columns, train_valuation, val_valuation) = load_data(
+                train_end=train_end, val_start=val_start, val_end=val_end)
 
             inspect_observation(train_windows[0], feature_columns)
 
             # create the environments
-            train_env = make_env(train_windows, train_returns)
-            val_env = make_env(val_windows, val_returns)
+            train_env = make_env(train_windows, train_returns, train_valuation)
+            val_env = make_env(val_windows, val_returns, val_valuation)
 
             train_env.reset(seed=seed)
             val_env.reset(seed=seed)
@@ -77,11 +78,11 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ETF_TI
     print_validation_results(results_df)
 
     # Final training on all data up to 2021
-    (train_windows, train_returns, test_windows,test_returns,
+    (train_windows, train_returns, test_windows,test_returns, train_valuation, test_valuation
     ) = load_test_data()
 
-    train_env = make_env(train_windows, train_returns)
-    test_env = make_env(test_windows, test_returns)
+    train_env = make_env(train_windows, train_returns, train_valuation)
+    test_env = make_env(test_windows, test_returns, test_valuation)
 
     train_env.reset(seed=0)
     test_env.reset(seed=0)
