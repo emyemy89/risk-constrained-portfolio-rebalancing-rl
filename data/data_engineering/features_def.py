@@ -152,3 +152,22 @@ def build_valuation_signal(prices):
     """
     valuation = -(prices / prices.rolling(252).mean() - 1)
     return valuation.sub(valuation.mean(axis=1), axis=0).div(valuation.std(axis=1), axis=0)
+
+def compute_intraday_return(close_price, open_price):
+    """
+    Compute the return from daily open until daily close
+    """
+    return (close_price-open_price)-1.0
+
+def compute_overnight_return(close_price, open_price):
+    """
+    Compute the return from the previous close until the present open
+    """
+    previous_close = close_price.shift(1)
+    return (open_price-previous_close)-1.0
+
+def compute_intraday_range(high_price, low_price, close_price):
+    """
+    Compute the intraday high-low range relative to the closing price
+    """
+    return (high_price-low_price)/close_price
