@@ -17,23 +17,18 @@ def create_features(data, rolling_window):
     :param data: the ETF data being used
     :return: features, log_returns
     """
-    prices = {
-        "open": data["Open"],
-        "high": data["High"],
-        "low": data["Low"],
-        "close": data["Close"],
-        "volume": data["Volume"],
-    }
-
-    intraday_return = compute_intraday_return(data["Open"], data["Close"])
-
-    overnight_return = compute_overnight_return(data["Open"], data["Close"])
-
-    intraday_range = compute_intraday_range(data["High"], data["Low"], data["Close"])
+    close_prices = data["Close"]
+    open_prices = data["Open"]
+    high_prices = data["High"]
+    low_prices = data["Low"]
 
     # We need to align so all 4 ETF:s start at the same time to match future matrix
     # For the moment, we work with only one column
     aligned_prices = align_assets(close_prices)
+
+    intraday_return = compute_intraday_return(open_prices, close_prices)
+    overnight_return = compute_overnight_return(open_prices, close_prices)
+    intraday_range = compute_intraday_range(high_prices, low_prices, close_prices)
 
     # get the features
     log_returns = compute_log_returns(aligned_prices)
@@ -58,6 +53,7 @@ def create_features(data, rolling_window):
     features = pd.concat(
         [
             log_returns,
+            intraday_return, overnight_return, intraday_range,
             volatility_20,
             momentum_20,
             correlations, spy_ma50, spy_ma200,
