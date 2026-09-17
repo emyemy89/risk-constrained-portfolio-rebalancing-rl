@@ -17,7 +17,19 @@ def create_features(data, rolling_window):
     :param data: the ETF data being used
     :return: features, log_returns
     """
-    close_prices = data["Close"]
+    prices = {
+        "open": data["Open"],
+        "high": data["High"],
+        "low": data["Low"],
+        "close": data["Close"],
+        "volume": data["Volume"],
+    }
+
+    intraday_return = compute_intraday_return(data["Open"], data["Close"])
+
+    overnight_return = compute_overnight_return(data["Open"], data["Close"])
+
+    intraday_range = compute_intraday_range(data["High"], data["Low"], data["Close"])
 
     # We need to align so all 4 ETF:s start at the same time to match future matrix
     # For the moment, we work with only one column
