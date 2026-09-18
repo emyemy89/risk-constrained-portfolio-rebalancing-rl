@@ -166,4 +166,4 @@ def compute_intraday_range(high_price, low_price, close_price):
     """
     Compute the intraday high-low range relative to the closing price
     """
-    return (high_price/low_price)/close_price
+    return (high_price-low_price)/close_price
