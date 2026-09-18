@@ -58,7 +58,7 @@ def create_features(data, rolling_window):
             momentum_20,
             correlations, spy_ma50, spy_ma200,
             spy_drawdown,
-        ],axis=1, keys=["ret", "vol20", "mom20",
+        ],axis=1, keys=["ret", "intra_ret", "overnight_ret", "intra_range", "vol20", "mom20",
                         "corr", "spy_ma50", "spy_ma200", "spy_drawdown",]
     ).dropna()
     return features, log_returns.loc[features.index], valuation_signal.loc[features.index]
@@ -153,17 +153,17 @@ def compute_intraday_return(close_price, open_price):
     """
     Compute the return from daily open until daily close
     """
-    return (close_price-open_price)-1.0
+    return (close_price/open_price)-1.0
 
 def compute_overnight_return(close_price, open_price):
     """
     Compute the return from the previous close until the present open
     """
     previous_close = close_price.shift(1)
-    return (open_price-previous_close)-1.0
+    return (open_price/previous_close)-1.0
 
 def compute_intraday_range(high_price, low_price, close_price):
     """
     Compute the intraday high-low range relative to the closing price
     """
-    return (high_price-low_price)/close_price
+    return (high_price/low_price)/close_price
