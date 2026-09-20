@@ -17,10 +17,10 @@ def create_features(data, rolling_window):
     :param data: the ETF data being used
     :return: features, log_returns
     """
-    close_prices = data["Close"]
-    open_prices = data["Open"]
-    high_prices = data["High"]
-    low_prices = data["Low"]
+    close_prices = align_assets(data["Close"])
+    open_prices = align_assets(data["Open"])
+    high_prices = align_assets(data["High"])
+    low_prices = align_assets(data["Low"])
 
     # We need to align so all 4 ETF:s start at the same time to match future matrix
     # For the moment, we work with only one column
