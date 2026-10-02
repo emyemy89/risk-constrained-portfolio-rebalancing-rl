@@ -17,21 +17,11 @@ def create_features(data, rolling_window):
     :param data: the ETF data being used
     :return: features, log_returns
     """
-    close_prices = align_assets(data["Close"])
-    open_prices = align_assets(data["Open"])
-    high_prices = align_assets(data["High"])
-    low_prices = align_assets(data["Low"])
-
-    # We need to align so all 4 ETF:s start at the same time to match future matrix
-    # For the moment, we work with only one column
-    aligned_prices = align_assets(close_prices)
-
-    intraday_return = compute_intraday_return(open_prices, close_prices)
-    overnight_return = compute_overnight_return(open_prices, close_prices)
-    intraday_range = compute_intraday_range(high_prices, low_prices, close_prices)
+    # We need to align so all ETF securities start at the same time to match future matrix
+    close_prices, open_prices, high_prices, low_prices, volume = align_market_data(data)
 
     # get the features
-    log_returns = compute_log_returns(aligned_prices)
+    log_returns = compute_log_returns(close_prices)
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
 
     volatility_20 = compute_volatility(log_returns, rolling_window)
@@ -40,12 +30,12 @@ def create_features(data, rolling_window):
 
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
-    spy_ma50 = compute_trend_regime(50, aligned_prices)
-    spy_ma200 = compute_trend_regime(200, aligned_prices)
-    spy_drawdown = compute_drawdown(252, aligned_prices)
+    spy_ma50 = compute_trend_regime(50, close_prices)
+    spy_ma200 = compute_trend_regime(200, close_prices)
+    spy_drawdown = compute_drawdown(252, close_prices)
 
     # For environment
-    valuation_signal = build_valuation_signal(aligned_prices)
+    valuation_signal = build_valuation_signal(close_prices)
     valuation_signal["CASH"] = 0.0
     valuation_signal = valuation_signal[log_returns.columns]
 
@@ -53,15 +43,23 @@ def create_features(data, rolling_window):
     features = pd.concat(
         [
             log_returns,
-            intraday_return, overnight_return, intraday_range,
             volatility_20,
             momentum_20,
             correlations, spy_ma50, spy_ma200,
             spy_drawdown,
-        ],axis=1, keys=["ret", "intra_ret", "overnight_ret", "intra_range", "vol20", "mom20",
+        ],axis=1, keys=["ret",
+                         "vol20", "mom20",
                         "corr", "spy_ma50", "spy_ma200", "spy_drawdown",]
     ).dropna()
     return features, log_returns.loc[features.index], valuation_signal.loc[features.index]
+
+def align_market_data(data):
+    close_prices = align_assets(data["Close"])
+    open_prices = align_assets(data["Open"])
+    high_prices = align_assets(data["High"])
+    low_prices = align_assets(data["Low"])
+    volume = align_assets(data["Volume"])
+    return close_prices, open_prices, high_prices, low_prices, volume
 
 def compute_log_returns(aligned_prices):
     """
