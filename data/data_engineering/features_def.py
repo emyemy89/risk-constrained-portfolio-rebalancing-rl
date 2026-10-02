@@ -23,6 +23,9 @@ def create_features(data, rolling_window):
     # get the features
     log_returns = compute_log_returns(close_prices)
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
+    # Intraday momentum
+    intraday_momentum_20 = compute_intraday_momentum(open_prices, close_prices, 20)
+    intraday_momentum_20["CASH"] = 0.0
 
     volatility_20 = compute_volatility(log_returns, rolling_window)
 
@@ -37,7 +40,10 @@ def create_features(data, rolling_window):
     # For environment
     valuation_signal = build_valuation_signal(close_prices)
     valuation_signal["CASH"] = 0.0
+
+
     valuation_signal = valuation_signal[log_returns.columns]
+    intraday_momentum_20 = intraday_momentum_20[log_returns.columns]
 
     # Combine the features
     features = pd.concat(
@@ -165,3 +171,13 @@ def compute_intraday_range(high_price, low_price, close_price):
     Compute the intraday high-low range relative to the closing price
     """
     return (high_price-low_price)/close_price
+
+def compute_intraday_momentum(open_prices, close_prices, time_interval):
+    """
+    Compute cumulative intraday momentum over the last X trading days.
+    Each day's intraday return is:
+        close_t / open_t - 1
+    The signal is the sum of log intraday returns over the window.
+    """
+    intraday_log_returns = np.log(close_prices / open_prices)
+    return intraday_log_returns.rolling(time_interval).sum()
