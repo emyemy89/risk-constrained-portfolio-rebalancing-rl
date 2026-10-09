@@ -191,8 +191,17 @@ class PortfolioEnv(gym.Env):
         # Normalization, enforce:
         #   (1) weights >= 0      (2) weights <= 1
         #   (3) sum(weights) = 1  (4) |weights - prev_weights| <= max_weight_change
-        weights = action_to_weights(action, self.prev_weights,
-                                    max_weight_change=self.max_weight_change,)
+        #####
+        # Risk Manager, stop activity after 3 losses
+        if self.risk_management:
+            self.risk_manager.update_recovery(self._market_recovered())
+        was_stopped = self.risk_management and self.risk_manager.stopped
+        if was_stopped:
+            weights = np.zeros(self.n_assets)
+            weights[-1] = 1.0  # CASH is the last asset
+        else:
+            weights = action_to_weights(action, self.prev_weights,
+                                        max_weight_change=self.max_weight_change,)
 
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
@@ -207,6 +216,8 @@ class PortfolioEnv(gym.Env):
         cost = self.transaction_cost * turnover
         # Net portfolio return after transaction costs
         net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
+        if self.risk_management and not was_stopped: # Risk Manager
+            self.risk_manager.record_return(net_portfolio_return)
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
 
@@ -239,6 +250,6 @@ class PortfolioEnv(gym.Env):
             "weights": weights,
             "cumm_return": self.portfolio_value / self.initial_value - 1,
             "episode_return": episode_return,
-            "step_return": portfolio_return,
+            "step_return": net_portfolio_return,
         }
         return next_obs, reward, terminated, False, info
