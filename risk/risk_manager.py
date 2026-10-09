@@ -12,28 +12,40 @@ class RiskManager:
         self.recovery_count = 0
         self.stopped = False
 
-
-    def update(self, daily_return, market_recovered=False):
+    def record_return(self, daily_return):
         """
-        Count consecutive losses and update the risk manager
+        Record the daily return value
+        """
+        if self.stopped:
+            return
+        if daily_return < 0:
+            self.consecutive_losses += 1
+        else:
+            self.consecutive_losses = 0
+        if self.consecutive_losses >= self.max_consecutive_losses:
+            self.stopped = True
+            self.recovery_count = 0
+
+    def update_recovery(self, market_recovered):
+        """
+        Update the risk manager with market recovered
         """
         if not self.stopped:
-            if daily_return < 0:
-                self.consecutive_losses += 1
-            else:
-                self.consecutive_losses = 0
-
-            if self.consecutive_losses >= self.max_consecutive_losses:
-                self.stopped = True
-                self.recovery_count = 0
-
+            return
+        if market_recovered:
+            self.recovery_count += 1
         else:
-            if market_recovered:
-                self.recovery_count += 1
-            else:
-                self.recovery_count = 0
-            if self.recovery_count >= self.recovery_days:
-                self.stopped = False
-                self.consecutive_losses = 0
-                self.recovery_count = 0
-        return self.stopped
+            self.recovery_count = 0
+        if self.recovery_count >= self.recovery_days:
+            self.stopped = False
+            self.consecutive_losses = 0
+            self.recovery_count = 0
+
+    def reset(self):
+        """
+        Reset the risk manager
+        """
+        self.consecutive_losses = 0
+        self.recovery_count = 0
+        self.stopped = False
+
