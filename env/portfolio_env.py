@@ -11,6 +11,8 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 
+from risk.risk_manager import RiskManager
+
 DEFAULT_MAX_WEIGHT_CHANGE = 0.2
 
 def project_to_bounded_simplex(values, lower, upper):
@@ -101,6 +103,9 @@ class PortfolioEnv(gym.Env):
             volatility_window=20,
             transaction_cost=0.0005,
             reward_horizon=1,
+            risk_management=False,
+            max_consecutive_losses=3,
+            recovery_days=3,
     ):
         self.windows = windows
         self.returns = returns
@@ -144,6 +149,13 @@ class PortfolioEnv(gym.Env):
             dtype=np.float32,
         )
 
+        # Risk Manager
+        self.risk_management = risk_management
+        self.risk_manager = RiskManager(
+            max_consecutive_losses=max_consecutive_losses,
+            recovery_days=recovery_days,
+        )
+
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.current_step = 0
@@ -151,6 +163,7 @@ class PortfolioEnv(gym.Env):
         self.prev_weights = np.ones(self.n_assets) / self.n_assets
         self.portfolio_returns = []
         self.initial_value = self.portfolio_value
+        self.risk_manager.reset()
         return self._get_obs(), {}
 
     def _get_obs(self):
@@ -158,6 +171,19 @@ class PortfolioEnv(gym.Env):
         portfolio_state = self.prev_weights.astype(np.float32)
         return np.concatenate([market_obs.flatten(),portfolio_state])
 
+    def _market_recovered(self):
+        """
+        Risk Manager functionality
+        """
+        # SPY is assumed to be the first asset.
+        if self.current_step < 49:
+            return False
+        spy_prices = np.exp(
+            np.cumsum(self.returns[:self.current_step + 1, 0])
+        )
+        current_price = spy_prices[-1]
+        moving_average = np.mean(spy_prices[-50:])
+        return current_price > moving_average
 
     def step(self, action):
         # (St, action) -> (St+1, reward)
