@@ -1,6 +1,8 @@
 """
 Risk Manager
 """
+import numpy as np
+
 class RiskManager:
     """
     The risk manager is meant to stop 3 wrong executions in a row
@@ -23,7 +25,7 @@ class RiskManager:
         self.stopped = False
         self.stop_reason = None
 
-    def record_return(self, daily_return):
+    def record_return(self, daily_return, portfolio_value):
         """
         Record the daily return value
         """
@@ -33,8 +35,40 @@ class RiskManager:
             self.consecutive_losses += 1
         else:
             self.consecutive_losses = 0
+        self.return_history.append(daily_return)
+        self.return_history = self.return_history[-self.rolling_window:]
+
+        if self.peak_value is None:
+            self.peak_value = portfolio_value
+        else:
+            self.peak_value = max(
+                self.peak_value, portfolio_value
+            )
+
+        drawdown = portfolio_value / self.peak_value - 1
+
+        rolling_return = None
+        if len(self.return_history) == self.rolling_window:
+            rolling_return = (
+                    np.prod(1 + np.array(self.return_history)) - 1
+            )
+
         if self.consecutive_losses >= self.max_consecutive_losses:
             self.stopped = True
+            self.stop_reason = "consecutive_losses"
+
+        elif (
+                rolling_return is not None
+                and rolling_return <= -self.max_rolling_loss
+        ):
+            self.stopped = True
+            self.stop_reason = "rolling_loss"
+
+        elif drawdown <= -self.max_drawdown:
+            self.stopped = True
+            self.stop_reason = "drawdown"
+
+        if self.stopped:
             self.recovery_count = 0
 
     def update_recovery(self, market_recovered):
@@ -52,11 +86,4 @@ class RiskManager:
             self.consecutive_losses = 0
             self.recovery_count = 0
 
-    def reset(self):
-        """
-        Reset the risk manager
-        """
-        self.consecutive_losses = 0
-        self.recovery_count = 0
-        self.stopped = False
 
