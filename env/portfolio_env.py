@@ -216,8 +216,8 @@ class PortfolioEnv(gym.Env):
         cost = self.transaction_cost * turnover
         # Net portfolio return after transaction costs
         net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
-        if self.risk_management and not was_stopped: # Risk Manager
-            self.risk_manager.record_return(net_portfolio_return)
+        if self.risk_management and not was_stopped:
+            self.risk_manager.record_return(net_portfolio_return, self.portfolio_value,)
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
 
