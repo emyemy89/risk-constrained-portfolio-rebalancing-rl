@@ -2,7 +2,7 @@
 
 
 class RiskManager:
-    def init(self, max_consecutive_losses=3, recovery_days=3):
+    def __init__(self, max_consecutive_losses=3, recovery_days=3):
         self.max_consecutive_losses = max_consecutive_losses
         self.recovery_days = recovery_days
         self.consecutive_losses = 0
