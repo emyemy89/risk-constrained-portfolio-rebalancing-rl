@@ -1,6 +1,12 @@
+"""
+Test the risk manager from /risk/risk_manager.py
+"""
 from risk.risk_manager import RiskManager
 
 def test_stops_after_three_consecutive_losses():
+    """
+    Test stopping after 3 consecutive losses
+    """
     risk = RiskManager(max_consecutive_losses=3)
 
     assert risk.update(-0.01) is False
@@ -9,6 +15,9 @@ def test_stops_after_three_consecutive_losses():
 
 
 def test_positive_return_resets_loss_counter():
+    """
+    Test that a positive return resets the counter
+    """
     risk = RiskManager(max_consecutive_losses=3)
 
     risk.update(-0.01)
@@ -17,6 +26,9 @@ def test_positive_return_resets_loss_counter():
     assert risk.update(-0.01) is False
 
 def test_resumes_after_three_recovery_signals():
+    """
+    Test that activity resumes after 3 recovery signals
+    """
     risk = RiskManager(max_consecutive_losses=3, recovery_days=3)
 
     risk.update(-0.01)
