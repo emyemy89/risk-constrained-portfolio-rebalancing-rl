@@ -104,8 +104,8 @@ class PortfolioEnv(gym.Env):
             transaction_cost=0.0005,
             reward_horizon=1,
             risk_management=False,
-            max_consecutive_losses=3,
-            recovery_days=3,
+            max_consecutive_losses=10,
+            recovery_days=2,
     ):
         self.windows = windows
         self.returns = returns
@@ -154,6 +154,8 @@ class PortfolioEnv(gym.Env):
         self.risk_manager = RiskManager(
             max_consecutive_losses=max_consecutive_losses,
             recovery_days=recovery_days,
+            max_rolling_loss=0.3,
+            max_drawdown=0.15,
         )
 
     def reset(self, seed=None, options=None):
@@ -164,6 +166,7 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns = []
         self.initial_value = self.portfolio_value
         self.risk_manager.reset()
+        self.risk_manager.peak_value = self.portfolio_value
         return self._get_obs(), {}
 
     def _get_obs(self):
@@ -216,11 +219,10 @@ class PortfolioEnv(gym.Env):
         cost = self.transaction_cost * turnover
         # Net portfolio return after transaction costs
         net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
-        if self.risk_management and not was_stopped:
-            self.risk_manager.record_return(net_portfolio_return, self.portfolio_value,)
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
-
+        if self.risk_management and not was_stopped:
+            self.risk_manager.record_return(net_portfolio_return, self.portfolio_value,)
         # Signals
         valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
         concentration_signal = np.sum(weights**2)
@@ -251,5 +253,7 @@ class PortfolioEnv(gym.Env):
             "cumm_return": self.portfolio_value / self.initial_value - 1,
             "episode_return": episode_return,
             "step_return": net_portfolio_return,
+            "risk_stopped": self.risk_manager.stopped,
+            "stop_reason": self.risk_manager.stop_reason,
         }
         return next_obs, reward, terminated, False, info
