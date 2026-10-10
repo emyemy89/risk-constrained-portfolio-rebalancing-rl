@@ -20,16 +20,35 @@ from inference.predict import DEFAULT_MODEL_PATH, predict_allocation
 
 
 def make_synthetic_etf_data(start="2018-01-01", end="2026-06-01", seed=0):
-    """Yahoo Finance-style Close prices covering the training cutoff."""
+    """Yahoo Finance-style prices covering the training cutoff."""
     dates = pd.bdate_range(start, end)
     rng = np.random.default_rng(seed)
     frames = {}
     for ticker in ETF_TICKERS:
         log_returns = rng.normal(0.0002, 0.01, size=len(dates))
-        frames[ticker] = 100.0 * np.exp(np.cumsum(log_returns))
-    close = pd.DataFrame(frames, index=dates)
-    close.columns = pd.MultiIndex.from_product([["Close"], list(ETF_TICKERS)])
-    return close
+        close = 100.0 * np.exp(np.cumsum(log_returns))
+
+        open_prices = np.empty(len(dates))
+        open_prices[0] = close[0]
+        open_prices[1:] = close[:-1]
+
+        daily_range = rng.uniform(0.001, 0.02, size=len(dates))
+        high = np.maximum(open_prices, close) * (1.0 + daily_range)
+        low = np.minimum(open_prices, close) * (1.0 - daily_range)
+
+        volume = rng.integers(100_000, 1_000_000, size=len(dates))
+
+        frames[("Open", ticker)] = open_prices
+        frames[("High", ticker)] = high
+        frames[("Low", ticker)] = low
+        frames[("Close", ticker)] = close
+        frames[("Volume", ticker)] = volume
+
+    data = pd.DataFrame(frames, index=dates)
+    data.columns = pd.MultiIndex.from_tuples(
+        data.columns, names=["Price", "Ticker"]
+    )
+    return data
 
 
 class FrozenPolicy:  # pylint: disable=too-few-public-methods
