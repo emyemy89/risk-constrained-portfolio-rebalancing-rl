@@ -60,7 +60,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ETF_TI
 
             # create the environments
             train_env = make_env(train_windows, train_returns, train_valuation)
-            val_env = make_env(val_windows, val_returns, val_valuation, risk_management=True,)
+            val_env = make_env(val_windows, val_returns, val_valuation, risk_management=False)
 
             train_env.reset(seed=seed)
             val_env.reset(seed=seed)
@@ -82,7 +82,7 @@ def run_training(rl_algorithm="PPO", total_timesteps=200_000, asset_names=ETF_TI
     ) = load_test_data()
 
     train_env = make_env(train_windows, train_returns, train_valuation)
-    test_env = make_env(test_windows, test_returns, test_valuation, risk_management=True,)
+    test_env = make_env(test_windows, test_returns, test_valuation, risk_management=False)
 
     train_env.reset(seed=0)
     test_env.reset(seed=0)
