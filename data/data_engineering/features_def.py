@@ -61,6 +61,7 @@ def create_features(data, rolling_window):
     return features, log_returns.loc[features.index], valuation_signal.loc[features.index]
 
 def align_market_data(data):
+    """Add prices for OHLCV"""
     close_prices = align_assets(data["Close"])
     open_prices = align_assets(data["Open"])
     high_prices = align_assets(data["High"])
@@ -100,7 +101,6 @@ def compute_correlation(log_returns, time_interval):
         Compute rolling correlation of each asset with SPY
         :param log_returns: DataFrame of aligned asset log returns
                             columns = ETF tickers
-        :param window: rolling correlation window
         :return: DataFrame containing rolling correlations with SPY
     """
     spy_returns = log_returns["SPY"]
@@ -108,9 +108,7 @@ def compute_correlation(log_returns, time_interval):
     for asset in log_returns.columns:
         if asset != "SPY":
             correlations[f"{asset}_corr_SPY"] = (
-                log_returns[asset]
-                .rolling(time_interval)
-                .corr(spy_returns)
+                log_returns[asset].rolling(time_interval).corr(spy_returns)
             )
     return correlations
 
