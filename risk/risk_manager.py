@@ -9,12 +9,15 @@ class RiskManager:
     """
     def __init__(self, rolling_window=5,
                  max_consecutive_losses=3, recovery_days=3,
-                 max_rolling_loss=0.05, max_drawdown=0.08,):
+                 max_rolling_loss=0.05, max_drawdown=0.08,
+                 cooldown_days=5, retrigger_buffer=0.05):
         self.max_consecutive_losses = max_consecutive_losses
         self.rolling_window = rolling_window
         self.max_rolling_loss = max_rolling_loss
         self.max_drawdown = max_drawdown
         self.recovery_days = recovery_days
+        self.cooldown_days = cooldown_days
+        self.retrigger_buffer = retrigger_buffer
         self.reset()
 
     def reset(self):
@@ -24,58 +27,46 @@ class RiskManager:
         self.peak_value = None
         self.stopped = False
         self.stop_reason = None
+        self.cooldown_remaining = 0
+        self.resume_drawdown = None
+        self.previous_drawdown = 0.0
 
-    def record_return(self, daily_return, portfolio_value):
-        """
-        Record the daily return value
-        """
-        if self.stopped:
-            return
-        if daily_return < 0:
-            self.consecutive_losses += 1
-        else:
-            self.consecutive_losses = 0
-        self.return_history.append(daily_return)
-        self.return_history = self.return_history[-self.rolling_window:]
-
+    def update(self, portfolio_value, was_stopped):
         if self.peak_value is None:
             self.peak_value = portfolio_value
+
+        self.peak_value = max(self.peak_value, portfolio_value)
+        drawdown = portfolio_value / self.peak_value - 1.0
+
+        # Continue the fixed cash cooldown.
+        if was_stopped:
+            self.cooldown_remaining -= 1
+
+            if self.cooldown_remaining <= 0:
+                self.stopped = False
+                self.stop_reason = None
+                self.resume_drawdown = drawdown
+                self.previous_drawdown = drawdown
+
+            return
+
+        # A recovery above the drawdown threshold re-arms the normal trigger.
+        if drawdown > -self.max_drawdown:
+            self.resume_drawdown = None
+
+        if self.resume_drawdown is None:
+            should_stop = (
+                    self.previous_drawdown > -self.max_drawdown
+                    and drawdown <= -self.max_drawdown
+            )
         else:
-            self.peak_value = max(self.peak_value, portfolio_value)
-        drawdown = portfolio_value / self.peak_value - 1
+            should_stop = (
+                    drawdown <= self.resume_drawdown - self.retrigger_buffer
+            )
 
-        rolling_return = None
-        if len(self.return_history) == self.rolling_window:
-            rolling_return = (np.prod(1 + np.array(self.return_history)) - 1)
-
-        if self.consecutive_losses >= self.max_consecutive_losses:
-            self.stopped = True
-            self.stop_reason = "consecutive_losses"
-
-        elif rolling_return is not None and rolling_return <= -self.max_rolling_loss:
-            self.stopped = True
-            self.stop_reason = "rolling_loss"
-
-        elif drawdown <= -self.max_drawdown:
+        if should_stop:
             self.stopped = True
             self.stop_reason = "drawdown"
+            self.cooldown_remaining = self.cooldown_days
 
-        if self.stopped:
-            self.recovery_count = 0
-
-    def update_recovery(self, market_recovered):
-        """
-        Update the risk manager with market recovered
-        """
-        if not self.stopped:
-            return
-        if market_recovered:
-            self.recovery_count += 1
-        else:
-            self.recovery_count = 0
-        if self.recovery_count >= self.recovery_days:
-            self.stopped = False
-            self.stop_reason = None
-            self.consecutive_losses = 0
-            self.recovery_count = 0
-            self.return_history = []
+        self.previous_drawdown = drawdown
