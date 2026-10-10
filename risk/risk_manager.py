@@ -1,7 +1,6 @@
 """
 Risk Manager
 """
-import numpy as np
 
 class RiskManager:
     """
