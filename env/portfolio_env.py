@@ -13,7 +13,7 @@ from gymnasium import spaces
 
 from risk.risk_manager import RiskManager
 
-DEFAULT_MAX_WEIGHT_CHANGE = 0.2
+DEFAULT_MAX_WEIGHT_CHANGE = 0.3
 
 def project_to_bounded_simplex(values, lower, upper):
     """Project values onto the simplex subject to lower and upper bounds."""
@@ -155,7 +155,9 @@ class PortfolioEnv(gym.Env):
             max_consecutive_losses=max_consecutive_losses,
             recovery_days=recovery_days,
             max_rolling_loss=0.3,
-            max_drawdown=0.15,
+            max_drawdown=0.1,
+            cooldown_days=5,
+            retrigger_buffer=0.05,
         )
 
     def reset(self, seed=None, options=None):
@@ -196,15 +198,32 @@ class PortfolioEnv(gym.Env):
         #   (3) sum(weights) = 1  (4) |weights - prev_weights| <= max_weight_change
         #####
         # Risk Manager, stop activity after 3 losses
-        if self.risk_management:
-            self.risk_manager.update_recovery(self._market_recovered())
         was_stopped = self.risk_management and self.risk_manager.stopped
-        if was_stopped:
-            weights = np.zeros(self.n_assets)
-            weights[-1] = 1.0  # CASH is the last asset
-        else:
-            weights = action_to_weights(action, self.prev_weights,
-                                        max_weight_change=self.max_weight_change,)
+        weights = action_to_weights(
+            action,
+            self.prev_weights,
+            max_weight_change=self.max_weight_change,
+        )
+
+        if self.risk_management and self.risk_manager.peak_value is not None:
+            drawdown = (
+                    self.portfolio_value / self.risk_manager.peak_value - 1.0
+            )
+
+            if drawdown <= -0.15:
+                max_risky_exposure = 0.25
+            elif drawdown <= -0.10:
+                max_risky_exposure = 0.50
+            elif drawdown <= -0.05:
+                max_risky_exposure = 0.75
+            else:
+                max_risky_exposure = 1.0
+
+            risky_total = np.sum(weights[:-1])
+
+            if risky_total > max_risky_exposure:
+                weights[:-1] *= max_risky_exposure / risky_total
+                weights[-1] = 1.0 - max_risky_exposure
 
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
@@ -221,8 +240,8 @@ class PortfolioEnv(gym.Env):
         net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
-        if self.risk_management and not was_stopped:
-            self.risk_manager.record_return(net_portfolio_return, self.portfolio_value,)
+        if self.risk_management:
+            self.risk_manager.update(self.portfolio_value, was_stopped)
         # Signals
         valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
         concentration_signal = np.sum(weights**2)
@@ -253,7 +272,7 @@ class PortfolioEnv(gym.Env):
             "cumm_return": self.portfolio_value / self.initial_value - 1,
             "episode_return": episode_return,
             "step_return": net_portfolio_return,
-            "risk_stopped": self.risk_manager.stopped,
+            "risk_stopped": was_stopped,
             "stop_reason": self.risk_manager.stop_reason,
         }
         return next_obs, reward, terminated, False, info
