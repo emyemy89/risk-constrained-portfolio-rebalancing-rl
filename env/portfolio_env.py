@@ -93,6 +93,9 @@ class PortfolioEnv(gym.Env):
 
         reward_horizon (int): Number of future steps used when calculating rewards.
         """
+
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def __init__(
             self,
             windows,
