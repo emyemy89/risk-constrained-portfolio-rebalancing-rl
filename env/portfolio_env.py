@@ -97,7 +97,7 @@ class PortfolioEnv(gym.Env):
             self,
             windows,
             returns,
-            valuation_signal,
+            valuation_signal=None,
             initial_cash=1.0,
             risk_lambda=0.00,
             volatility_window=20,
@@ -123,7 +123,10 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns = []
         self.initial_value = initial_cash
 
-        self.valuation_signal = np.asarray(valuation_signal)
+        if valuation_signal is None:
+            self.valuation_signal = np.zeros_like(self.returns)
+        else:
+            self.valuation_signal = np.asarray(valuation_signal, dtype=np.float32)
         self.valuation_lambda = 0.0
         self.concentration_lambda = -0.0001
 
@@ -199,31 +202,15 @@ class PortfolioEnv(gym.Env):
         #####
         # Risk Manager, stop activity after 3 losses
         was_stopped = self.risk_management and self.risk_manager.stopped
-        weights = action_to_weights(
-            action,
-            self.prev_weights,
-            max_weight_change=self.max_weight_change,
-        )
-
-        if self.risk_management and self.risk_manager.peak_value is not None:
-            drawdown = (
-                    self.portfolio_value / self.risk_manager.peak_value - 1.0
+        if was_stopped:
+            weights = np.zeros(self.n_assets)
+            weights[-1] = 1.0  # Allocate entirely to CASH
+        else:
+            weights = action_to_weights(
+                action,
+                self.prev_weights,
+                max_weight_change=self.max_weight_change,
             )
-
-            if drawdown <= -0.15:
-                max_risky_exposure = 0.25
-            elif drawdown <= -0.10:
-                max_risky_exposure = 0.50
-            elif drawdown <= -0.05:
-                max_risky_exposure = 0.75
-            else:
-                max_risky_exposure = 1.0
-
-            risky_total = np.sum(weights[:-1])
-
-            if risky_total > max_risky_exposure:
-                weights[:-1] *= max_risky_exposure / risky_total
-                weights[-1] = 1.0 - max_risky_exposure
 
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
