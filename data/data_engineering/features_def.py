@@ -18,6 +18,7 @@ def create_features(data, rolling_window):
     :return: features, log_returns
     """
     # We need to align so all ETF securities start at the same time to match future matrix
+    # pylint: disable=unused-variable
     close_prices, open_prices, high_prices, low_prices, volume = align_market_data(data)
 
     # get the features

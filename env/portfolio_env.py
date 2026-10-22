@@ -134,7 +134,8 @@ class PortfolioEnv(gym.Env):
         self.concentration_lambda = -0.0001
 
         # Action
-        self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE # Do not go more than 20% in allocation in one step
+        # Do not go more than 20% in allocation in one step
+        self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE
         self.action_space = spaces.Box(
             low=-1,
             high=1,
@@ -166,7 +167,7 @@ class PortfolioEnv(gym.Env):
             retrigger_buffer=0.05,
         )
 
-    def reset(self, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         self.current_step = 0
         self.portfolio_value = self.initial_cash

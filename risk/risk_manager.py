@@ -20,6 +20,9 @@ class RiskManager:
         self.reset()
 
     def reset(self):
+        """
+        Resets the risk manager
+        """
         self.consecutive_losses = 0
         self.recovery_count = 0
         self.return_history = []
@@ -31,6 +34,9 @@ class RiskManager:
         self.previous_drawdown = 0.0
 
     def update(self, portfolio_value, was_stopped):
+        """
+        Updates the risk manager
+        """
         if self.peak_value is None:
             self.peak_value = portfolio_value
 
