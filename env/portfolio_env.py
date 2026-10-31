@@ -117,8 +117,10 @@ class PortfolioEnv(gym.Env):
         self.prev_weights = np.ones(self.n_assets) / self.n_assets
         self.portfolio_returns = []
         self.initial_value = initial_cash
+
         self.valuation_signal = np.asarray(valuation_signal)
-        self.valuation_lambda = 0.0001
+        self.valuation_lambda = 0.0
+        self.concentration_lambda = -0.0001
 
         # Action
         self.max_weight_change = DEFAULT_MAX_WEIGHT_CHANGE # Do not go more than 20% in allocation in one step
@@ -182,13 +184,17 @@ class PortfolioEnv(gym.Env):
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
 
+        # Signals
+        valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
+        concentration_signal = np.sum(weights**2)
+
         # Store net simple return
         self.portfolio_returns.append(net_portfolio_return)
 
         # Compute Reward
         reward = np.log1p(net_portfolio_return)
-        valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
         reward += self.valuation_lambda * valuation_reward
+        reward -= self.concentration_lambda * concentration_signal
 
         # Risk Penalty
         if len(self.portfolio_returns) >= self.volatility_window:

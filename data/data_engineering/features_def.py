@@ -17,15 +17,15 @@ def create_features(data, rolling_window):
     :param data: the ETF data being used
     :return: features, log_returns
     """
-    close_prices = data["Close"]
-
-    # We need to align so all 4 ETF:s start at the same time to match future matrix
-    # For the moment, we work with only one column
-    aligned_prices = align_assets(close_prices)
+    # We need to align so all ETF securities start at the same time to match future matrix
+    close_prices, open_prices, high_prices, low_prices, volume = align_market_data(data)
 
     # get the features
-    log_returns = compute_log_returns(aligned_prices)
+    log_returns = compute_log_returns(close_prices)
     log_returns["CASH"] = 0.0 # Agent will se it as an asset with no return, vol or mom
+    # Intraday momentum
+    intraday_momentum_20 = compute_intraday_momentum(open_prices, close_prices, 20)
+    intraday_momentum_20["CASH"] = 0.0
 
     volatility_20 = compute_volatility(log_returns, rolling_window)
 
@@ -33,14 +33,17 @@ def create_features(data, rolling_window):
 
     correlations = compute_correlation(log_returns.drop(columns=["CASH"]), rolling_window)
     correlations["CASH_corr_SPY"] = 0.0
-    spy_ma50 = compute_trend_regime(50, aligned_prices)
-    spy_ma200 = compute_trend_regime(200, aligned_prices)
-    spy_drawdown = compute_drawdown(252, aligned_prices)
+    spy_ma50 = compute_trend_regime(50, close_prices)
+    spy_ma200 = compute_trend_regime(200, close_prices)
+    spy_drawdown = compute_drawdown(252, close_prices)
 
     # For environment
-    valuation_signal = build_valuation_signal(aligned_prices)
+    valuation_signal = build_valuation_signal(close_prices)
     valuation_signal["CASH"] = 0.0
+
+
     valuation_signal = valuation_signal[log_returns.columns]
+    intraday_momentum_20 = intraday_momentum_20[log_returns.columns]
 
     # Combine the features
     features = pd.concat(
@@ -50,10 +53,20 @@ def create_features(data, rolling_window):
             momentum_20,
             correlations, spy_ma50, spy_ma200,
             spy_drawdown,
-        ],axis=1, keys=["ret", "vol20", "mom20",
-                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown",]
+            intraday_momentum_20,
+        ],axis=1, keys=["ret",
+                         "vol20", "mom20",
+                        "corr", "spy_ma50", "spy_ma200", "spy_drawdown", "intra_mom_20"]
     ).dropna()
     return features, log_returns.loc[features.index], valuation_signal.loc[features.index]
+
+def align_market_data(data):
+    close_prices = align_assets(data["Close"])
+    open_prices = align_assets(data["Open"])
+    high_prices = align_assets(data["High"])
+    low_prices = align_assets(data["Low"])
+    volume = align_assets(data["Volume"])
+    return close_prices, open_prices, high_prices, low_prices, volume
 
 def compute_log_returns(aligned_prices):
     """
@@ -140,3 +153,13 @@ def build_valuation_signal(prices):
     """
     valuation = -(prices / prices.rolling(252).mean() - 1)
     return valuation.sub(valuation.mean(axis=1), axis=0).div(valuation.std(axis=1), axis=0)
+
+def compute_intraday_momentum(open_prices, close_prices, time_interval):
+    """
+    Compute cumulative intraday momentum over the last X trading days.
+    Each day's intraday return is:
+        close_t / open_t - 1
+    The signal is the sum of log intraday returns over the window.
+    """
+    intraday_log_returns = np.log(close_prices / open_prices)
+    return intraday_log_returns.rolling(time_interval).sum()
