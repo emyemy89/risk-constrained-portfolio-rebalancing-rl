@@ -13,7 +13,7 @@ from gymnasium import spaces
 
 from risk.risk_manager import RiskManager
 
-DEFAULT_MAX_WEIGHT_CHANGE = 0.2
+DEFAULT_MAX_WEIGHT_CHANGE = 0.3
 
 def project_to_bounded_simplex(values, lower, upper):
     """Project values onto the simplex subject to lower and upper bounds."""
@@ -97,15 +97,15 @@ class PortfolioEnv(gym.Env):
             self,
             windows,
             returns,
-            valuation_signal,
+            valuation_signal=None,
             initial_cash=1.0,
             risk_lambda=0.00,
             volatility_window=20,
             transaction_cost=0.0005,
             reward_horizon=1,
             risk_management=False,
-            max_consecutive_losses=3,
-            recovery_days=3,
+            max_consecutive_losses=10,
+            recovery_days=2,
     ):
         self.windows = windows
         self.returns = returns
@@ -123,7 +123,10 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns = []
         self.initial_value = initial_cash
 
-        self.valuation_signal = np.asarray(valuation_signal)
+        if valuation_signal is None:
+            self.valuation_signal = np.zeros_like(self.returns)
+        else:
+            self.valuation_signal = np.asarray(valuation_signal, dtype=np.float32)
         self.valuation_lambda = 0.0
         self.concentration_lambda = -0.0001
 
@@ -154,6 +157,10 @@ class PortfolioEnv(gym.Env):
         self.risk_manager = RiskManager(
             max_consecutive_losses=max_consecutive_losses,
             recovery_days=recovery_days,
+            max_rolling_loss=0.3,
+            max_drawdown=0.1,
+            cooldown_days=5,
+            retrigger_buffer=0.05,
         )
 
     def reset(self, seed=None, options=None):
@@ -164,6 +171,7 @@ class PortfolioEnv(gym.Env):
         self.portfolio_returns = []
         self.initial_value = self.portfolio_value
         self.risk_manager.reset()
+        self.risk_manager.peak_value = self.portfolio_value
         return self._get_obs(), {}
 
     def _get_obs(self):
@@ -193,15 +201,16 @@ class PortfolioEnv(gym.Env):
         #   (3) sum(weights) = 1  (4) |weights - prev_weights| <= max_weight_change
         #####
         # Risk Manager, stop activity after 3 losses
-        if self.risk_management:
-            self.risk_manager.update_recovery(self._market_recovered())
         was_stopped = self.risk_management and self.risk_manager.stopped
         if was_stopped:
             weights = np.zeros(self.n_assets)
-            weights[-1] = 1.0  # CASH is the last asset
+            weights[-1] = 1.0  # Allocate entirely to CASH
         else:
-            weights = action_to_weights(action, self.prev_weights,
-                                        max_weight_change=self.max_weight_change,)
+            weights = action_to_weights(
+                action,
+                self.prev_weights,
+                max_weight_change=self.max_weight_change,
+            )
 
         # Use Turnover=1/2 ∑ ∣w_{i,t} −w{i,t-1}∣
         turnover = 0.5*np.sum(np.abs(weights - self.prev_weights))
@@ -216,11 +225,10 @@ class PortfolioEnv(gym.Env):
         cost = self.transaction_cost * turnover
         # Net portfolio return after transaction costs
         net_portfolio_return = (1.0+portfolio_return)*(1.0-cost)-1.0
-        if self.risk_management and not was_stopped: # Risk Manager
-            self.risk_manager.record_return(net_portfolio_return)
         # Portfolio wealth evolution
         self.portfolio_value *= (1.0 + net_portfolio_return)
-
+        if self.risk_management:
+            self.risk_manager.update(self.portfolio_value, was_stopped)
         # Signals
         valuation_reward = np.dot(weights, self.valuation_signal[self.current_step])
         concentration_signal = np.sum(weights**2)
@@ -251,5 +259,7 @@ class PortfolioEnv(gym.Env):
             "cumm_return": self.portfolio_value / self.initial_value - 1,
             "episode_return": episode_return,
             "step_return": net_portfolio_return,
+            "risk_stopped": was_stopped,
+            "stop_reason": self.risk_manager.stop_reason,
         }
         return next_obs, reward, terminated, False, info
