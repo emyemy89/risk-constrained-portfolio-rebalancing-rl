@@ -5,7 +5,8 @@ import numpy as np
 
 from env.portfolio_env import PortfolioEnv
 
-
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
 def make_test_env(
     n_timesteps=10,
     window_size=3,
@@ -38,7 +39,7 @@ def test_reset_returns_valid_observation():
     Test that after resset we get a valid observation
     """
     env = make_test_env()
-    observation, info = env.reset()
+    observation, _ = env.reset()
     assert observation.shape == env.observation_space.shape
     assert observation.dtype == np.float32
     assert np.all(np.isfinite(observation))
@@ -179,7 +180,7 @@ def test_portfolio_value_updates_with_returns():
     )
     env.reset()
     action = np.zeros(3, dtype=np.float32)
-    _, _, _, _, info = env.step(action)
+    env.step(action)
     expected_simple_returns = np.expm1([0.01, 0.02, 0.03])
     expected_return = np.mean(expected_simple_returns)
     expected_value = 1.0 + expected_return

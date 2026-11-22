@@ -51,8 +51,8 @@ def load_data(train_end, val_start, val_end,
     train_scaled, val_scaled = scale_features(train_features, val_features)
 
     # Convert time series to window observation
-    train_windows, train_dates = create_windows(train_scaled, obs_window_size)
-    val_windows, val_dates = create_windows(val_scaled, obs_window_size)
+    train_windows, _ = create_windows(train_scaled, obs_window_size)
+    val_windows, _ = create_windows(val_scaled, obs_window_size)
 
     # return must match the observation, so we shift
     offset = obs_window_size - 1
@@ -86,8 +86,8 @@ def load_test_data(train_end=DEFAULT_TRAIN_END, test_start=DEFAULT_TEST_START,
     train_scaled, test_scaled = scale_features(train_features, test_features)
 
 
-    train_windows, train_dates = create_windows(train_scaled, obs_window_size)
-    test_windows, test_dates = create_windows(test_scaled, obs_window_size)
+    train_windows, _ = create_windows(train_scaled, obs_window_size)
+    test_windows, _ = create_windows(test_scaled, obs_window_size)
 
     # return must match the observation, so we shift
     offset = obs_window_size - 1
