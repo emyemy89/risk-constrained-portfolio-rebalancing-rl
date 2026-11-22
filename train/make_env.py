@@ -39,6 +39,6 @@ def make_envs(
         sharing the same environment configuration.
         """
     train_env = make_env(train_windows, train_returns, train_valuation_signal, **kwargs)
-    val_env = make_env(val_windows, val_returns, val_valuation_signal, **kwargs)
-    test_env = make_env(test_windows, test_returns, test_valuation_signal, **kwargs)
+    val_env = make_env(val_windows, val_returns, val_valuation_signal, risk_management=True)
+    test_env = make_env(test_windows, test_returns, test_valuation_signal, risk_management=True)
     return train_env, val_env, test_env

@@ -9,23 +9,45 @@ market regime sensitivity.
 import numpy as np
 
 def evaluate_model(model, env):
-    """
-    Run a deterministic eval and collect portfolio history
-    """
+    """Run a deterministic evaluation and collect portfolio history."""
     obs, _ = env.reset()
+
+    base_env = env.unwrapped
+    print(f"Risk management enabled: {base_env.risk_management}")
+
     portfolio_values = []
     weights_history = []
     rewards = []
     daily_returns = []
+    stop_reasons = {}
+
     done = False
+
     while not done:
-        action, _ = model.predict(obs, deterministic=True,)
+        action, _ = model.predict(obs, deterministic=True)
         obs, reward, terminated, truncated, info = env.step(action)
+
         portfolio_values.append(info["portfolio_value"])
         weights_history.append(info["weights"])
         rewards.append(reward)
         daily_returns.append(info["step_return"])
+
+        if info["risk_stopped"]:
+            reason = info["stop_reason"]
+            stop_reasons[reason] = stop_reasons.get(reason, 0) + 1
+
         done = terminated or truncated
+
+    # These prints must be OUTSIDE the while loop.
+    stopped_steps = sum(stop_reasons.values())
+    total_steps = len(daily_returns)
+
+    print(
+        f"Risk-stopped steps: {stopped_steps}/{total_steps} "
+        f"({100 * stopped_steps / total_steps:.1f}%)"
+    )
+    print(f"Stop reasons: {stop_reasons}")
+
     return {
         "portfolio_values": np.array(portfolio_values),
         "weights": np.array(weights_history),
